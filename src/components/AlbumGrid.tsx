@@ -9,7 +9,7 @@ export interface Album {
 
 export function AlbumGrid({ albums, emptyMessage }: { albums: Album[]; emptyMessage: string }) {
   if (albums.length === 0) {
-    return <p style={{ color: "var(--color-text-muted)" }}>{emptyMessage}</p>;
+    return <p style={{ color: "var(--vynl-texte-2)" }}>{emptyMessage}</p>;
   }
 
   return (
@@ -28,12 +28,12 @@ export function AlbumGrid({ albums, emptyMessage }: { albums: Album[]; emptyMess
               aspectRatio: "1",
               borderRadius: "var(--radius-md)",
               marginBottom: "0.65rem",
-              background: album.cover_url ? `url(${album.cover_url}) center/cover` : "var(--gradient-signature)",
+              background: album.cover_url ? `url(${album.cover_url}) center/cover` : "var(--vynl-pochette-vide)",
             }}
           />
           <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{album.title}</p>
           {album.artists && (
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem" }}>{album.artists.name}</p>
+            <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>{album.artists.name}</p>
           )}
         </Link>
       ))}

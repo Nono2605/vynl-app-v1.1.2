@@ -20,7 +20,7 @@ export default async function PlaylistsPage() {
 
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
-      <h1 style={{ fontSize: "1.75rem" }}>Your Playlists</h1>
+      <h1 className="display-title">Your Playlists</h1>
       <CreatePlaylistForm />
       <PlaylistList playlists={playlists} emptyMessage="No playlists yet — create your first one above." />
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePlayer, type PlayerTrack } from "@/lib/player/PlayerContext";
+import { PlayIcon, PauseIcon } from "@/components/icons";
 
 export function TrackPlayButton({
   track,
@@ -29,18 +30,19 @@ export function TrackPlayButton({
         height: size,
         borderRadius: "50%",
         border: "none",
-        background: "var(--gradient-signature)",
+        background: "var(--vynl-degrade-vague)",
         color: "#fff",
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: size * 0.4,
         flex: "none",
-        boxShadow: "var(--shadow-card)",
+        // Pas de lueur forte ici (une seule par écran, sur le lecteur) : le
+        // morceau en cours est signalé par une petite lueur cyan.
+        boxShadow: isCurrent ? "var(--vynl-lueur-cyan)" : "none",
       }}
     >
-      {showPause ? "❚❚" : "▶"}
+      {showPause ? <PauseIcon size={size * 0.45} /> : <PlayIcon size={size * 0.45} />}
     </button>
   );
 }

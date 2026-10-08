@@ -16,8 +16,8 @@ export function OnboardingForm() {
         minLength={3}
         className="input-field"
       />
-      {state?.error && <p style={{ color: "#ff6b6b" }}>{state.error}</p>}
-      <button type="submit" disabled={pending} className="btn btn-primary" style={{ padding: "0.75rem 1rem" }}>
+      {state?.error && <p style={{ color: "var(--vynl-erreur)" }}>{state.error}</p>}
+      <button type="submit" disabled={pending} className="btn btn-primary">
         {pending ? "Saving…" : "Continue"}
       </button>
     </form>

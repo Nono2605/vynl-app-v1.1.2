@@ -24,9 +24,9 @@ export default async function DiscoverPage() {
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
       <section>
-        <h1 style={{ fontSize: "1.75rem", marginBottom: "var(--space-sm)" }}>Discover</h1>
-        <p style={{ color: "var(--color-text-muted)" }}>
-          Every track published on BRAND, most recent first.
+        <h1 className="display-title" style={{ marginBottom: "var(--space-sm)" }}>Discover</h1>
+        <p style={{ color: "var(--vynl-texte-2)" }}>
+          Every track published on Vynl, most recent first.
         </p>
       </section>
 

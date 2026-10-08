@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { saveToLibrary, removeFromLibrary } from "@/app/actions/library";
+import { HeartIcon } from "@/components/icons";
 
 export function SaveButton({
   itemType,
@@ -40,13 +41,13 @@ export function SaveButton({
         border: "none",
         cursor: pending ? "default" : "pointer",
         padding: 0,
-        color: saved ? "var(--color-blue-bright)" : "var(--color-text-muted)",
+        display: "flex",
+        // Favori : cyan, cœur plein uniquement à l'état actif.
+        color: saved ? "var(--vynl-cyan)" : "var(--vynl-texte-2)",
         opacity: pending ? 0.6 : 1,
-        fontSize: "1.1rem",
-        lineHeight: 1,
       }}
     >
-      {saved ? "♥" : "♡"}
+      <HeartIcon size={18} filled={saved} />
     </button>
   );
 }

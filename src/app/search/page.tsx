@@ -35,7 +35,7 @@ export default async function SearchPage({
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
       <section>
-        <h1 style={{ fontSize: "1.75rem", marginBottom: "var(--space-md)" }}>Search</h1>
+        <h1 className="display-title" style={{ marginBottom: "var(--space-md)" }}>Search</h1>
         <form method="get" style={{ display: "flex", gap: "var(--space-sm)" }}>
           <input
             type="text"
@@ -46,7 +46,7 @@ export default async function SearchPage({
             className="input-field"
             style={{ flex: 1 }}
           />
-          <button type="submit" className="btn btn-primary" style={{ padding: "0.75rem 1.25rem" }}>
+          <button type="submit" className="btn btn-primary">
             Search
           </button>
         </form>

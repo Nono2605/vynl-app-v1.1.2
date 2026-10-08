@@ -10,7 +10,7 @@ export interface PlaylistSummary {
 
 export function PlaylistList({ playlists, emptyMessage }: { playlists: PlaylistSummary[]; emptyMessage: string }) {
   if (playlists.length === 0) {
-    return <p style={{ color: "var(--color-text-muted)" }}>{emptyMessage}</p>;
+    return <p style={{ color: "var(--vynl-texte-2)" }}>{emptyMessage}</p>;
   }
 
   return (
@@ -26,7 +26,7 @@ export function PlaylistList({ playlists, emptyMessage }: { playlists: PlaylistS
             gap: "var(--space-md)",
             padding: "0.6rem",
             borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--color-border)",
+            border: "1px solid var(--vynl-bordure)",
           }}
         >
           <div
@@ -37,7 +37,7 @@ export function PlaylistList({ playlists, emptyMessage }: { playlists: PlaylistS
               borderRadius: "var(--radius-sm)",
               background: playlist.cover_url
                 ? `url(${playlist.cover_url}) center/cover`
-                : "var(--gradient-signature)",
+                : "var(--vynl-pochette-vide)",
             }}
           />
           <span style={{ fontWeight: 600, flex: 1 }}>{playlist.title}</span>
@@ -45,8 +45,9 @@ export function PlaylistList({ playlists, emptyMessage }: { playlists: PlaylistS
             <span
               style={{
                 fontSize: "0.75rem",
-                color: "var(--color-text-muted)",
-                border: "1px solid var(--color-border)",
+                fontWeight: 500,
+                color: "var(--vynl-texte-2)",
+                border: "1px solid var(--vynl-bordure)",
                 borderRadius: "999px",
                 padding: "0.15rem 0.6rem",
               }}

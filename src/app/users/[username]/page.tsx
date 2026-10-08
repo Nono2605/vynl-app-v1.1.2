@@ -56,18 +56,18 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             borderRadius: "50%",
             background: profile.avatar_url
               ? `url(${profile.avatar_url}) center/cover`
-              : "var(--gradient-signature)",
+              : "var(--vynl-pochette-vide)",
           }}
         />
         <div style={{ flex: 1, minWidth: 200 }}>
           <h1 style={{ fontSize: "1.75rem" }}>{profile.display_name || profile.username}</h1>
-          <p style={{ color: "var(--color-text-muted)" }}>@{profile.username}</p>
+          <p style={{ color: "var(--vynl-texte-2)" }}>@{profile.username}</p>
           <div style={{ display: "flex", gap: "var(--space-md)", marginTop: "0.5rem" }}>
-            <span style={{ color: "var(--color-text-muted)" }}>
-              <strong style={{ color: "var(--color-text)" }}>{profile.followers_count}</strong> followers
+            <span style={{ color: "var(--vynl-texte-2)" }}>
+              <strong style={{ color: "var(--vynl-texte)" }}>{profile.followers_count}</strong> followers
             </span>
-            <span style={{ color: "var(--color-text-muted)" }}>
-              <strong style={{ color: "var(--color-text)" }}>{profile.following_count}</strong> following
+            <span style={{ color: "var(--vynl-texte-2)" }}>
+              <strong style={{ color: "var(--vynl-texte)" }}>{profile.following_count}</strong> following
             </span>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       </div>
 
       {profile.bio && (
-        <p style={{ color: "var(--color-text-muted)", maxWidth: "60ch", marginBottom: "var(--space-md)" }}>
+        <p style={{ color: "var(--vynl-texte-2)", maxWidth: "60ch", marginBottom: "var(--space-md)" }}>
           {profile.bio}
         </p>
       )}

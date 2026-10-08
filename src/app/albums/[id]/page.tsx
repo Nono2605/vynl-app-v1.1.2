@@ -52,7 +52,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
             height: 180,
             flex: "none",
             borderRadius: "var(--radius-md)",
-            background: album.cover_url ? `url(${album.cover_url}) center/cover` : "var(--gradient-signature)",
+            background: album.cover_url ? `url(${album.cover_url}) center/cover` : "var(--vynl-pochette-vide)",
           }}
         />
         <div style={{ alignSelf: "flex-end" }}>
@@ -61,7 +61,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
               textTransform: "uppercase",
               fontSize: "0.75rem",
               letterSpacing: "0.05em",
-              color: "var(--color-text-muted)",
+              color: "var(--vynl-texte-2)",
               marginBottom: "0.35rem",
             }}
           >
@@ -69,7 +69,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
           </p>
           <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>{album.title}</h1>
           {album.artists && (
-            <p style={{ color: "var(--color-text-muted)" }}>
+            <p style={{ color: "var(--vynl-texte-2)" }}>
               <Link href={`/artists/${album.artists.slug}`} className="text-link">
                 {album.artists.name}
               </Link>
@@ -81,7 +81,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
       <section>
         {album.tracks.length === 0 ? (
-          <p style={{ color: "var(--color-text-muted)" }}>No tracks published yet.</p>
+          <p style={{ color: "var(--vynl-texte-2)" }}>No tracks published yet.</p>
         ) : (
           <ol style={{ listStyle: "none" }}>
             {album.tracks.map((track, index) => (
@@ -94,10 +94,10 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                   gap: "var(--space-md)",
                   padding: "0.65rem var(--space-sm)",
                   borderRadius: "var(--radius-sm)",
-                  borderBottom: "1px solid var(--color-border)",
+                  borderBottom: "1px solid var(--vynl-bordure)",
                 }}
               >
-                <span style={{ color: "var(--color-text-muted)", width: 24, textAlign: "right" }}>
+                <span style={{ color: "var(--vynl-texte-3)", fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>
                   {track.track_number ?? index + 1}
                 </span>
                 <TrackPlayButton
@@ -110,7 +110,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                   size={28}
                 />
                 <span style={{ flex: 1 }}>{track.title}</span>
-                <span style={{ color: "var(--color-text-muted)", fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                   {formatDuration(track.duration_seconds)}
                 </span>
               </li>

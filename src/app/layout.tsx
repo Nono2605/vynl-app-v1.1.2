@@ -1,29 +1,32 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Dela_Gothic_One, Sora } from "next/font/google";
 import { Suspense } from "react";
 import { Nav, NavFallback } from "@/components/Nav";
 import { PlayerProvider } from "@/lib/player/PlayerContext";
 import { PlayerBar } from "@/components/PlayerBar";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+// Dela Gothic One : logo et grands titres d'impact uniquement. Sora : tout le
+// reste. Les deux sont exposées en variables CSS, lues dans globals.css.
+const delaGothic = Dela_Gothic_One({
+  weight: "400",
+  variable: "--font-dela-gothic",
   subsets: ["latin"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "BRAND",
+  title: "Vynl",
   description: "Your music. Your artists. Your impact.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${inter.variable}`}>
+    <html lang="en" className={`${delaGothic.variable} ${sora.variable}`}>
       <body>
         <PlayerProvider>
           <Suspense fallback={<NavFallback />}>

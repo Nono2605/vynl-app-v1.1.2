@@ -11,21 +11,10 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
       }}
     >
       <h1 style={{ fontSize: "1.5rem", marginBottom: "var(--space-sm)" }}>Something went wrong</h1>
-      <p style={{ color: "var(--color-text-muted)", marginBottom: "var(--space-md)" }}>
+      <p style={{ color: "var(--vynl-texte-2)", marginBottom: "var(--space-md)" }}>
         Please try again in a moment.
       </p>
-      <button
-        onClick={reset}
-        style={{
-          padding: "0.75rem 1rem",
-          borderRadius: "var(--radius-sm)",
-          border: "none",
-          background: "var(--gradient-signature)",
-          color: "#fff",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
+      <button onClick={reset} className="btn btn-primary">
         Try again
       </button>
     </div>

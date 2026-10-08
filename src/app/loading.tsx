@@ -6,7 +6,7 @@ export default function Loading() {
         alignItems: "center",
         justifyContent: "center",
         padding: "var(--space-xl)",
-        color: "var(--color-text-muted)",
+        color: "var(--vynl-texte-2)",
       }}
     >
       Loading…

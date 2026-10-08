@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setPlaylistVisibility } from "@/app/actions/playlists";
+import { GlobeIcon, LockIcon } from "@/components/icons";
 
 export function PlaylistVisibilityToggle({
   playlistId,
@@ -29,11 +30,11 @@ export function PlaylistVisibilityToggle({
     <button
       onClick={toggle}
       disabled={pending}
-      className="btn btn-secondary"
-      style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}
+      className="btn btn-secondary btn-sm"
       aria-pressed={isPublic}
     >
-      {isPublic ? "🌐 Public" : "🔒 Private"}
+      {isPublic ? <GlobeIcon /> : <LockIcon />}
+      {isPublic ? "Public" : "Private"}
     </button>
   );
 }

@@ -10,7 +10,7 @@ export interface Artist {
 
 export function ArtistGrid({ artists, emptyMessage }: { artists: Artist[]; emptyMessage: string }) {
   if (artists.length === 0) {
-    return <p style={{ color: "var(--color-text-muted)" }}>{emptyMessage}</p>;
+    return <p style={{ color: "var(--vynl-texte-2)" }}>{emptyMessage}</p>;
   }
 
   return (
@@ -37,13 +37,13 @@ export function ArtistGrid({ artists, emptyMessage }: { artists: Artist[]; empty
               marginBottom: "0.65rem",
               background: artist.avatar_url
                 ? `url(${artist.avatar_url}) center/cover`
-                : "var(--gradient-signature)",
+                : "var(--vynl-pochette-vide)",
             }}
           />
           <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>
             {artist.name}
             {artist.verified && (
-              <span title="Verified" style={{ color: "var(--color-blue-bright)" }}>
+              <span title="Verified" style={{ color: "var(--vynl-reflet)" }}>
                 {" "}
                 ✓
               </span>

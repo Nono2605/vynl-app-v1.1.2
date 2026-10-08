@@ -16,7 +16,7 @@ export function AddTrackSearch({ playlistId }: { playlistId: string }) {
           className="input-field"
           style={{ flex: 1, padding: "0.6rem 0.9rem" }}
         />
-        <button type="submit" disabled={pending} className="btn btn-secondary" style={{ padding: "0.6rem 1rem" }}>
+        <button type="submit" disabled={pending} className="btn btn-secondary btn-sm">
           Search
         </button>
       </form>
@@ -24,7 +24,7 @@ export function AddTrackSearch({ playlistId }: { playlistId: string }) {
       {state?.results && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           {state.results.length === 0 ? (
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
+            <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.875rem" }}>
               No tracks match &quot;{state.query}&quot;.
             </p>
           ) : (
@@ -37,18 +37,18 @@ export function AddTrackSearch({ playlistId }: { playlistId: string }) {
                   justifyContent: "space-between",
                   padding: "0.5rem 0.75rem",
                   borderRadius: "var(--radius-sm)",
-                  background: "var(--color-card)",
+                  background: "var(--vynl-vinyle)",
                 }}
               >
                 <span>
                   {track.title}{" "}
-                  <span style={{ color: "var(--color-text-muted)" }}>— {track.artists?.name ?? "Unknown"}</span>
+                  <span style={{ color: "var(--vynl-texte-2)" }}>— {track.artists?.name ?? "Unknown"}</span>
                 </span>
                 <form action={addTrackToPlaylist.bind(null, playlistId, track.id)}>
                   <button
                     type="submit"
                     className="btn-plain"
-                    style={{ color: "var(--color-blue-bright)", fontWeight: 600 }}
+                    style={{ color: "var(--vynl-bleu)", fontWeight: 600 }}
                   >
                     Add
                   </button>

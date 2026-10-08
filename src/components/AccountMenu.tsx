@@ -45,7 +45,7 @@ export function AccountMenu({
           <Link href="/account" role="menuitem" className="menu-item" onClick={() => setOpen(false)}>
             Settings
           </Link>
-          <div style={{ borderTop: "1px solid var(--color-border)", margin: "0.35rem 0" }} />
+          <div style={{ borderTop: "1px solid var(--vynl-bordure)", margin: "0.35rem 0" }} />
           <form action={logout}>
             <button type="submit" role="menuitem" className="menu-item" style={{ width: "100%", textAlign: "left" }}>
               Log out
@@ -61,13 +61,14 @@ const avatarStyle: React.CSSProperties = {
   width: 24,
   height: 24,
   borderRadius: "50%",
-  background: "var(--gradient-signature)",
+  background: "var(--vynl-vinyle)",
+  border: "1px solid var(--vynl-sillon)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontSize: "0.75rem",
-  fontWeight: 700,
-  color: "#fff",
+  fontWeight: 600,
+  color: "var(--vynl-texte)",
 };
 
 const menuStyle: React.CSSProperties = {
@@ -75,8 +76,8 @@ const menuStyle: React.CSSProperties = {
   top: "calc(100% + 0.5rem)",
   right: 0,
   minWidth: 160,
-  background: "var(--color-card)",
-  border: "1px solid var(--color-border)",
+  background: "var(--vynl-abysse)",
+  border: "1px solid var(--vynl-bordure)",
   borderRadius: "var(--radius-sm)",
   boxShadow: "var(--shadow-card)",
   padding: "0.35rem",

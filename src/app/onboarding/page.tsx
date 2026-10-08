@@ -23,9 +23,9 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: "var(--space-xl) auto", padding: "0 var(--space-md)" }}>
-      <h1 style={{ fontSize: "1.75rem", marginBottom: "var(--space-sm)" }}>Choose a username</h1>
-      <p style={{ color: "var(--color-text-muted)", marginBottom: "var(--space-md)" }}>
+    <div className="bg-signature" style={{ maxWidth: 400, margin: "var(--space-xl) auto", padding: "0 var(--space-md)" }}>
+      <h1 className="display-title" style={{ marginBottom: "var(--space-sm)" }}>Choose a username</h1>
+      <p style={{ color: "var(--vynl-texte-2)", marginBottom: "var(--space-md)" }}>
         This is how other listeners and artists will see you.
       </p>
       <OnboardingForm />

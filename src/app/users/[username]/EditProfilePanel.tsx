@@ -54,18 +54,18 @@ export function EditProfilePanel({ username, displayName, bio }: Props) {
       }}
     >
       <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-        <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>Username</span>
+        <span style={{ fontSize: "0.8125rem", color: "var(--vynl-texte-2)" }}>Username</span>
         <input type="text" name="username" defaultValue={username} required minLength={3} className="input-field" />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-        <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>Display name</span>
+        <span style={{ fontSize: "0.8125rem", color: "var(--vynl-texte-2)" }}>Display name</span>
         <input type="text" name="display_name" defaultValue={displayName} className="input-field" />
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-        <span style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)" }}>Bio</span>
+        <span style={{ fontSize: "0.8125rem", color: "var(--vynl-texte-2)" }}>Bio</span>
         <textarea name="bio" defaultValue={bio} rows={3} className="input-field" style={{ resize: "vertical" }} />
       </label>
-      {error && <p style={{ color: "#ff6b6b" }}>{error}</p>}
+      {error && <p style={{ color: "var(--vynl-erreur)" }}>{error}</p>}
       <div style={{ display: "flex", gap: "var(--space-sm)" }}>
         <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? "Saving…" : "Save"}

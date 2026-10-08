@@ -28,8 +28,8 @@ export async function Nav() {
 
   return (
     <nav style={navStyle}>
-      <Link href="/" style={brandStyle}>
-        BRAND
+      <Link href="/" className="font-brand" style={brandStyle}>
+        Vynl
       </Link>
       <div style={{ display: "flex", gap: "var(--space-md)", alignItems: "center" }}>
         <NavLink href="/discover">Discover</NavLink>
@@ -54,22 +54,26 @@ export async function Nav() {
 export function NavFallback() {
   return (
     <nav style={navStyle}>
-      <span style={brandStyle}>BRAND</span>
+      <span className="font-brand" style={brandStyle}>
+        Vynl
+      </span>
       <div style={{ display: "flex", gap: "var(--space-md)", alignItems: "center" }} />
     </nav>
   );
 }
 
+// Niveau 1 de profondeur : Abysse, une marche au-dessus du fond Nuit.
 const navStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   padding: "var(--space-sm) var(--space-lg)",
-  borderBottom: "1px solid var(--color-border)",
+  background: "var(--vynl-abysse)",
+  borderBottom: "1px solid var(--vynl-bordure)",
 };
 
+// Dela Gothic One ne descend jamais sous 24 px (classe .font-brand).
 const brandStyle: React.CSSProperties = {
-  fontFamily: "var(--font-heading)",
-  fontWeight: 700,
-  fontSize: "1.125rem",
+  fontSize: "1.5rem",
+  lineHeight: 1.2,
 };

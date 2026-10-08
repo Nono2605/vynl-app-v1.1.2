@@ -36,11 +36,11 @@ export default async function AccountPage() {
 
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
-      <h1 style={{ fontSize: "1.75rem" }}>Settings</h1>
+      <h1 className="display-title">Settings</h1>
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Private info</h2>
-        <p style={{ color: "var(--color-text-muted)", marginBottom: "var(--space-md)" }}>{me.email}</p>
+        <p style={{ color: "var(--vynl-texte-2)", marginBottom: "var(--space-md)" }}>{me.email}</p>
         <PasswordForm />
       </section>
 
@@ -55,13 +55,13 @@ export default async function AccountPage() {
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Subscription</h2>
         {subscription ? (
-          <p style={{ color: "var(--color-text-muted)" }}>
+          <p style={{ color: "var(--vynl-texte-2)" }}>
             {subscription.plan} — {subscription.status}
             {subscription.current_period_end &&
               ` (renews ${new Date(subscription.current_period_end).toLocaleDateString()})`}
           </p>
         ) : (
-          <p style={{ color: "var(--color-text-muted)" }}>No active subscription yet.</p>
+          <p style={{ color: "var(--vynl-texte-2)" }}>No active subscription yet.</p>
         )}
       </section>
     </div>

@@ -55,17 +55,17 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
             borderRadius: "var(--radius-md)",
             background: playlist.cover_url
               ? `url(${playlist.cover_url}) center/cover`
-              : "var(--gradient-signature)",
+              : "var(--vynl-pochette-vide)",
           }}
         />
         <div style={{ alignSelf: "flex-end", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <h1 style={{ fontSize: "2rem" }}>{playlist.title}</h1>
-          {playlist.description && <p style={{ color: "var(--color-text-muted)" }}>{playlist.description}</p>}
+          {playlist.description && <p style={{ color: "var(--vynl-texte-2)" }}>{playlist.description}</p>}
           {playlist.is_owner && (
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
               <PlaylistVisibilityToggle playlistId={playlist.id} initialIsPublic={playlist.is_public} />
               <form action={deletePlaylist.bind(null, playlist.id)}>
-                <button type="submit" className="btn-plain" style={{ color: "#ff6b6b" }}>
+                <button type="submit" className="btn-plain" style={{ color: "var(--vynl-erreur)" }}>
                   Delete playlist
                 </button>
               </form>
@@ -76,7 +76,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
 
       <section style={{ marginBottom: "var(--space-xl)" }}>
         {playlist.tracks.length === 0 ? (
-          <p style={{ color: "var(--color-text-muted)" }}>No tracks yet.</p>
+          <p style={{ color: "var(--vynl-texte-2)" }}>No tracks yet.</p>
         ) : (
           <ol style={{ listStyle: "none" }}>
             {playlist.tracks.map((track, index) => (
@@ -89,10 +89,10 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                   gap: "var(--space-md)",
                   padding: "0.65rem var(--space-sm)",
                   borderRadius: "var(--radius-sm)",
-                  borderBottom: "1px solid var(--color-border)",
+                  borderBottom: "1px solid var(--vynl-bordure)",
                 }}
               >
-                <span style={{ color: "var(--color-text-muted)", width: 24, textAlign: "right" }}>{index + 1}</span>
+                <span style={{ color: "var(--vynl-texte-3)", fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>{index + 1}</span>
                 <TrackPlayButton
                   track={{
                     id: track.id,
@@ -104,9 +104,9 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                 />
                 <span style={{ flex: 1 }}>
                   {track.title}{" "}
-                  <span style={{ color: "var(--color-text-muted)" }}>— {track.artists?.name ?? "Unknown"}</span>
+                  <span style={{ color: "var(--vynl-texte-2)" }}>— {track.artists?.name ?? "Unknown"}</span>
                 </span>
-                <span style={{ color: "var(--color-text-muted)", fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                   {formatDuration(track.duration_seconds)}
                 </span>
                 {playlist.is_owner && (
@@ -115,7 +115,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                       type="submit"
                       aria-label={`Remove ${track.title}`}
                       className="btn-plain"
-                      style={{ color: "var(--color-text-muted)" }}
+                      style={{ color: "var(--vynl-texte-2)" }}
                     >
                       ✕
                     </button>

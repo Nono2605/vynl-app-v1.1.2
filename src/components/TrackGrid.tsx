@@ -20,7 +20,7 @@ export function TrackGrid({
   savedTrackIds?: Set<string>;
 }) {
   if (tracks.length === 0) {
-    return <p style={{ color: "var(--color-text-muted)" }}>{emptyMessage}</p>;
+    return <p style={{ color: "var(--vynl-texte-2)" }}>{emptyMessage}</p>;
   }
 
   return (
@@ -42,7 +42,7 @@ export function TrackGrid({
               marginBottom: "0.65rem",
               background: track.albums?.cover_url
                 ? `url(${track.albums.cover_url}) center/cover`
-                : "var(--gradient-signature)",
+                : "var(--vynl-pochette-vide)",
             }}
           >
             <div
@@ -70,7 +70,7 @@ export function TrackGrid({
                   position: "absolute",
                   top: "0.5rem",
                   right: "0.5rem",
-                  background: "var(--color-overlay)",
+                  background: "var(--vynl-voile)",
                   borderRadius: "50%",
                   width: 28,
                   height: 28,
@@ -84,7 +84,7 @@ export function TrackGrid({
             )}
           </div>
           <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{track.title}</p>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "0.8125rem" }}>
+          <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>
             {track.artists?.name ?? "Unknown artist"}
           </p>
         </article>

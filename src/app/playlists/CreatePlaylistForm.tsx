@@ -17,7 +17,7 @@ export function CreatePlaylistForm() {
           className="input-field"
           style={{ flex: 1 }}
         />
-        <button type="submit" disabled={pending} className="btn btn-primary" style={{ padding: "0.65rem 1.25rem" }}>
+        <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? "Creating…" : "Create"}
         </button>
       </div>
@@ -26,14 +26,14 @@ export function CreatePlaylistForm() {
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
-          color: "var(--color-text-muted)",
+          color: "var(--vynl-texte-2)",
           fontSize: "0.875rem",
         }}
       >
         <input type="checkbox" name="is_public" />
         Make this playlist public
       </label>
-      {state?.error && <p style={{ color: "#ff6b6b" }}>{state.error}</p>}
+      {state?.error && <p style={{ color: "var(--vynl-erreur)" }}>{state.error}</p>}
     </form>
   );
 }

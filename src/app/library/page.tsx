@@ -36,7 +36,7 @@ export default async function LibraryPage() {
 
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
-      <h1 style={{ fontSize: "1.75rem" }}>Your Library</h1>
+      <h1 className="display-title">Your Library</h1>
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Tracks</h2>
