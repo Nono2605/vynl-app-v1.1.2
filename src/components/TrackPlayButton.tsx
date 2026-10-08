@@ -1,7 +1,7 @@
 "use client";
 
 import { usePlayer, type PlayerTrack } from "@/lib/player/PlayerContext";
-import { PlayIcon, PauseIcon } from "@/components/icons";
+import { PlayIcon, PauseIcon, SpinnerIcon } from "@/components/icons";
 
 export function TrackPlayButton({
   track,
@@ -11,9 +11,10 @@ export function TrackPlayButton({
   /** Diamètre en px — plus petit pour les listes en ligne, plus grand pour les cartes. */
   size?: number;
 }) {
-  const { track: current, isPlaying, play, toggle } = usePlayer();
+  const { track: current, isPlaying, isLoading, play, toggle } = usePlayer();
   const isCurrent = current?.id === track.id;
-  const showPause = isCurrent && isPlaying;
+  const showLoading = isCurrent && isLoading;
+  const showPause = isCurrent && isPlaying && !showLoading;
 
   function handleClick() {
     if (isCurrent) toggle();
@@ -23,7 +24,8 @@ export function TrackPlayButton({
   return (
     <button
       onClick={handleClick}
-      aria-label={showPause ? "Pause" : "Play"}
+      aria-label={showLoading ? "Loading" : showPause ? "Pause" : "Play"}
+      aria-busy={showLoading}
       className="icon-btn"
       style={{
         width: size,
@@ -42,7 +44,13 @@ export function TrackPlayButton({
         boxShadow: isCurrent ? "var(--vynl-lueur-cyan)" : "none",
       }}
     >
-      {showPause ? <PauseIcon size={size * 0.45} /> : <PlayIcon size={size * 0.45} />}
+      {showLoading ? (
+        <SpinnerIcon size={size * 0.45} />
+      ) : showPause ? (
+        <PauseIcon size={size * 0.45} />
+      ) : (
+        <PlayIcon size={size * 0.45} />
+      )}
     </button>
   );
 }

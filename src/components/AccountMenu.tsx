@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
+import { usePlayer } from "@/lib/player/PlayerContext";
 
 export function AccountMenu({
   profileHref,
@@ -13,6 +14,7 @@ export function AccountMenu({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { stop } = usePlayer();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -46,7 +48,14 @@ export function AccountMenu({
             Settings
           </Link>
           <div style={{ borderTop: "1px solid var(--vynl-bordure)", margin: "0.35rem 0" }} />
-          <form action={logout}>
+          {/* Le lecteur survit à la navigation : sans stop(), la musique
+              continuerait sur /login après la déconnexion. */}
+          <form
+            action={async () => {
+              stop();
+              await logout();
+            }}
+          >
             <button type="submit" role="menuitem" className="menu-item" style={{ width: "100%", textAlign: "left" }}>
               Log out
             </button>

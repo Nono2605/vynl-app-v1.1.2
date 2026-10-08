@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { usePlayer } from "@/lib/player/PlayerContext";
 import { formatDuration } from "@/lib/formatDuration";
 import { PlayIcon, PauseIcon, SpinnerIcon } from "@/components/icons";
@@ -7,11 +8,26 @@ import { PlayIcon, PauseIcon, SpinnerIcon } from "@/components/icons";
 // La mise en page (grille desktop, deux lignes sur mobile) est dans
 // globals.css (.player-bar*) ; ici, seulement l'apparence des éléments.
 export function PlayerBar() {
-  const { track, isPlaying, isLoading, currentTime, duration, error, toggle, seek } = usePlayer();
+  const { track, isPlaying, isLoading, isBuffering, currentTime, duration, error, toggle, seek } = usePlayer();
+
+  // Pendant un glissement du curseur on affiche la valeur du doigt, pas
+  // currentTime (que timeupdate réécrit en continu et qui faisait sauter le
+  // curseur) ; on ne seek qu'au relâchement. Au clavier : seek immédiat.
+  const [dragTime, setDragTime] = useState<number | null>(null);
+  const draggingRef = useRef(false);
 
   if (!track) return null;
 
-  const progress = duration ? Math.min(currentTime / duration, 1) * 100 : 0;
+  const shownTime = dragTime ?? currentTime;
+  const progress = duration ? Math.min(shownTime / duration, 1) * 100 : 0;
+
+  function commitDrag() {
+    draggingRef.current = false;
+    if (dragTime !== null) {
+      seek(dragTime);
+      setDragTime(null);
+    }
+  }
 
   return (
     <div role="region" aria-label="Player" className="player-bar">
@@ -39,16 +55,33 @@ export function PlayerBar() {
           className="icon-btn player-bar__play"
           style={playButtonStyle}
         >
-          {isLoading ? <SpinnerIcon size={20} /> : isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
+          {isLoading || isBuffering ? (
+            <SpinnerIcon size={20} />
+          ) : isPlaying ? (
+            <PauseIcon size={20} />
+          ) : (
+            <PlayIcon size={20} />
+          )}
         </button>
         <div className="player-bar__seek">
-          <span style={{ ...timeStyle, textAlign: "right" }}>{formatDuration(Math.floor(currentTime))}</span>
+          <span style={{ ...timeStyle, textAlign: "right" }}>{formatDuration(Math.floor(shownTime))}</span>
           <input
             type="range"
             min={0}
             max={duration || 0}
-            value={Math.min(currentTime, duration || 0)}
-            onChange={(e) => seek(Number(e.target.value))}
+            step="any"
+            value={Math.min(shownTime, duration || 0)}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              if (draggingRef.current) setDragTime(value);
+              else seek(value);
+            }}
+            onPointerDown={() => {
+              draggingRef.current = true;
+            }}
+            onPointerUp={commitDrag}
+            onPointerCancel={commitDrag}
+            onBlur={commitDrag}
             className="seek-bar"
             style={{ flex: 1, "--progress": `${progress}%` } as React.CSSProperties}
             aria-label="Seek"
