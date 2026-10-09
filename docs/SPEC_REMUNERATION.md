@@ -425,6 +425,12 @@ Issus du contrôle du 9 oct. 2026 (voir le rapport du même jour) :
      et `verified_at`) : à déployer après elle. Limite connue : un MP3 ou un FLAC **tronqué**
      garde la durée d'origine inscrite dans son en-tête (les secondes payées viennent de l'écoute
      validée côté serveur, pas de cette durée).
+   - **Rattrapage des fichiers déjà envoyés** (script `npm run backfill:audio`, dépôt de l'API).
+     Il mesure les fichiers uploadés avant la mesure automatique (format « unknown », taille
+     déclarée, aucune durée), puis aligne la durée des morceaux. **Simulation par défaut**
+     (`--apply` pour écrire), **ne supprime jamais rien** (un fichier illisible est signalé, pas
+     retiré), ne touche que les fichiers jamais mesurés, rejouable. À lancer **après** la migration
+     et le déploiement de l'API : d'abord en simulation, puis un morceau (`--track`), puis tout.
 2. **Lectures** : table `plays`, routes `POST /plays` et battements, instrumentation du
    lecteur. La bêta commence alors à collecter. Le champ `entitlement` (D12) est **déjà créé** ;
    l'API doit le renseigner à chaque lecture (toutes celles de la bêta valent `beta`), sans
