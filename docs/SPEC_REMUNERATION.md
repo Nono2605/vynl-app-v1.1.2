@@ -291,6 +291,17 @@ Issus du contrôle du 9 oct. 2026 (voir le rapport du même jour) :
 
 1. **Migration corrective « sans regret »** : clés étrangères protégées, garde-fous sur le
    statut des morceaux, colonnes manquantes (section 11). À faire **avant** tout nouvel utilisateur.
+   **État (9 oct. 2026) : préparée, testée sur une base jetable, pas encore appliquée à la base
+   Supabase.** Fichier : `API/supabase/migrations/20261009000000_integrity_guards.sql`
+   (dépôt de l'API, avec les contrôles 409 correspondants dans `creator/routes.ts`).
+   - **Couvert :** fin des cascades vers écoutes, allocations, portefeuilles, paiements,
+     abonnements ; compte supprimé = historique anonymisé ; un morceau publié ne repasse jamais
+     en brouillon et ne se supprime pas ; durée et fichier exigés à la publication ; ISRC
+     contrôlé ; colonnes `published_by`, `track_files.duration_seconds` et `verified_at`.
+   - **Pas encore couvert** (renvoyé aux étapes suivantes) : immutabilité d'une période close
+     (étape 4), splits versionnés et somme à 100 % (étapes 4-5), validation réelle des fichiers
+     audio (existence, format, taille, checksum, durée mesurée) et route d'administration pour
+     publier (étape 5), `plays` (étape 2).
 2. **Lectures** : table `plays`, routes `POST /plays` et battements, instrumentation du
    lecteur. La bêta commence alors à collecter.
 3. **Argent entrant** : `plans`, `payments`, branchement du prestataire de paiement.
