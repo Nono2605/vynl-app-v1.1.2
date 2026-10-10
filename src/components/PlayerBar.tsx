@@ -131,8 +131,9 @@ const playButtonStyle: React.CSSProperties = {
   justifyContent: "center",
 };
 
+// texte-2 et non texte-3 : le lecteur est un verre, pas le fond Nuit, où texte-3 manque de contraste.
 const timeStyle: React.CSSProperties = {
-  color: "var(--vynl-texte-3)",
+  color: "var(--vynl-texte-2)",
   fontSize: "0.75rem",
   fontWeight: 500,
   fontVariantNumeric: "tabular-nums",

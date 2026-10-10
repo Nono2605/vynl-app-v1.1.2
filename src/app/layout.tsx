@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Dela_Gothic_One, Sora } from "next/font/google";
 import { Suspense } from "react";
 import { Nav, NavFallback } from "@/components/Nav";
@@ -24,15 +24,25 @@ export const metadata: Metadata = {
   description: "Your music. Your artists. Your impact.",
 };
 
+// Barre d'adresse mobile à la couleur du fond Nuit.
+export const viewport: Viewport = {
+  themeColor: "#050816",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${delaGothic.variable} ${sora.variable}`}>
       <body>
+        <a href="#contenu" className="skip-link">
+          Skip to content
+        </a>
         <PlayerProvider>
           <Suspense fallback={<NavFallback />}>
             <Nav />
           </Suspense>
-          <main style={{ flex: 1, paddingBottom: "var(--player-bar-height)" }}>{children}</main>
+          <main id="contenu" style={{ flex: 1, paddingBottom: "var(--player-bar-height)" }}>
+            {children}
+          </main>
           <PlayerBar />
         </PlayerProvider>
       </body>

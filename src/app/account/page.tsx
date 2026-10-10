@@ -38,13 +38,13 @@ export default async function AccountPage() {
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
       <h1 className="display-title">Settings</h1>
 
-      <section>
+      <section className="surface-calme" style={{ padding: "var(--space-lg)" }}>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Private info</h2>
         <p style={{ color: "var(--vynl-texte-2)", marginBottom: "var(--space-md)" }}>{me.email}</p>
         <PasswordForm />
       </section>
 
-      <section>
+      <section className="surface-calme" style={{ padding: "var(--space-lg)" }}>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Music preferences</h2>
         <PreferencesForm
           explicitContent={me.profile?.explicit_content ?? true}
@@ -52,11 +52,11 @@ export default async function AccountPage() {
         />
       </section>
 
-      <section>
+      <section className="surface-calme" style={{ padding: "var(--space-lg)" }}>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Subscription</h2>
         {subscription ? (
           <p style={{ color: "var(--vynl-texte-2)" }}>
-            {subscription.plan} — {subscription.status}
+            {subscription.plan} · {subscription.status}
             {subscription.current_period_end &&
               ` (renews ${new Date(subscription.current_period_end).toLocaleDateString()})`}
           </p>

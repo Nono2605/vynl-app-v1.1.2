@@ -11,7 +11,7 @@ export function OnboardingForm() {
       <input
         type="text"
         name="username"
-        placeholder="Username"
+        placeholder="Username" aria-label="Username"
         required
         minLength={3}
         className="input-field"

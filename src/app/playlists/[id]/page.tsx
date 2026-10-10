@@ -105,7 +105,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                 />
                 <span style={{ flex: 1 }}>
                   {track.title}{" "}
-                  <span style={{ color: "var(--vynl-texte-2)" }}>— {track.artists?.name ?? "Unknown"}</span>
+                  <span style={{ color: "var(--vynl-texte-2)" }}>· {track.artists?.name ?? "Unknown"}</span>
                 </span>
                 <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                   {formatDuration(track.duration_seconds)}

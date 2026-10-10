@@ -40,7 +40,7 @@ export default async function SearchPage({
           <input
             type="text"
             name="q"
-            placeholder="Search tracks or artists"
+            placeholder="Search tracks or artists" aria-label="Search tracks or artists"
             defaultValue={query}
             autoFocus
             className="input-field"

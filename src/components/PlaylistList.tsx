@@ -25,7 +25,7 @@ export function PlaylistList({ playlists, emptyMessage }: { playlists: PlaylistS
             alignItems: "center",
             gap: "var(--space-md)",
             padding: "0.6rem",
-            borderRadius: "var(--radius-sm)",
+            borderRadius: "var(--vynl-rayon-carte)",
             border: "1px solid var(--vynl-bordure)",
           }}
         >
@@ -42,16 +42,7 @@ export function PlaylistList({ playlists, emptyMessage }: { playlists: PlaylistS
           />
           <span style={{ fontWeight: 600, flex: 1 }}>{playlist.title}</span>
           {playlist.is_public === false && (
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                color: "var(--vynl-texte-2)",
-                border: "1px solid var(--vynl-bordure)",
-                borderRadius: "999px",
-                padding: "0.15rem 0.6rem",
-              }}
-            >
+            <span className="badge" style={{ color: "var(--vynl-texte-2)" }}>
               Private
             </span>
           )}

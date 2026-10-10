@@ -1,10 +1,22 @@
-// Icônes de la DA Vynl : style trait (outline), 1,75 à 2 px, bouts arrondis ;
-// version pleine uniquement pour un état actif (cœur sauvegardé, lecture).
-// Dessinées en ligne pour ne pas ajouter de dépendance — mêmes formes que
-// Lucide/Phosphor si on veut migrer plus tard.
+// Icônes de la DA Vynl. Celles du jeu Phosphor viennent du sprite du site
+// (public/icons.svg, mêmes symboles que vynl.com) via <Icon name="…" />.
+// Le sprite n'a pas de cœur, de globe, de cadenas ni de spinner : ceux-là sont
+// dessinés ici en trait de 1,75 px à bouts arrondis, plein seulement pour un
+// état actif (cœur sauvegardé). À basculer sur le sprite quand il les aura.
 
 interface IconProps {
   size?: number;
+}
+
+/** Identifiants présents dans public/icons.svg que l'app utilise. */
+export type IconName = "play" | "pause" | "menu" | "close" | "check" | "history" | "headphones" | "vinyl" | "music";
+
+export function Icon({ name, size = 20 }: IconProps & { name: IconName }) {
+  return (
+    <svg className="icon" width={size} height={size} aria-hidden focusable="false">
+      <use href={`/icons.svg#${name}`} />
+    </svg>
+  );
 }
 
 const stroke = {
@@ -16,24 +28,11 @@ const stroke = {
 } as const;
 
 export function PlayIcon({ size = 20 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      {/* Centre optique : le triangle est 1 px à droite du centre géométrique. */}
-      <path
-        transform="translate(-1.5 0)"
-        d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2Z"
-      />
-    </svg>
-  );
+  return <Icon name="play" size={size} />;
 }
 
 export function PauseIcon({ size = 20 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <rect x="6" y="4.5" width="4" height="15" rx="1.5" />
-      <rect x="14" y="4.5" width="4" height="15" rx="1.5" />
-    </svg>
-  );
+  return <Icon name="pause" size={size} />;
 }
 
 export function SpinnerIcon({ size = 20 }: IconProps) {

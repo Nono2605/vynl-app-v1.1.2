@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
 import { NavLink } from "@/components/NavLink";
 import { AccountMenu } from "@/components/AccountMenu";
+import { SiteHeader } from "@/components/SiteHeader";
 
 interface Me {
   profile: { username: string } | null;
@@ -27,53 +27,27 @@ export async function Nav() {
   }
 
   return (
-    <nav style={navStyle}>
-      <Link href="/" className="font-brand" style={brandStyle}>
-        Vynl
-      </Link>
-      <div style={{ display: "flex", gap: "var(--space-md)", alignItems: "center" }}>
-        <NavLink href="/discover">Discover</NavLink>
-        <NavLink href="/search">Search</NavLink>
-        {session ? (
-          <>
-            <NavLink href="/library">Library</NavLink>
-            <NavLink href="/playlists">Playlists</NavLink>
-            <AccountMenu profileHref={username ? `/users/${username}` : "/account"} displayName={displayName} />
-          </>
-        ) : (
-          <>
-            <NavLink href="/login">Log in</NavLink>
-            <NavLink href="/signup">Sign up</NavLink>
-          </>
-        )}
-      </div>
-    </nav>
+    <SiteHeader>
+      <NavLink href="/discover">Discover</NavLink>
+      <NavLink href="/search">Search</NavLink>
+      {session ? (
+        <>
+          <NavLink href="/library">Library</NavLink>
+          <NavLink href="/playlists">Playlists</NavLink>
+          <AccountMenu profileHref={username ? `/users/${username}` : "/account"} displayName={displayName} />
+        </>
+      ) : (
+        <>
+          <NavLink href="/login">Log in</NavLink>
+          <NavLink href="/signup">Sign up</NavLink>
+        </>
+      )}
+    </SiteHeader>
   );
 }
 
+// Affiché le temps que la session et le profil se chargent : le logo seul,
+// sans liens, pour que l'en-tête ne saute pas à l'arrivée du contenu.
 export function NavFallback() {
-  return (
-    <nav style={navStyle}>
-      <span className="font-brand" style={brandStyle}>
-        Vynl
-      </span>
-      <div style={{ display: "flex", gap: "var(--space-md)", alignItems: "center" }} />
-    </nav>
-  );
+  return <SiteHeader />;
 }
-
-// Niveau 1 de profondeur : Abysse, une marche au-dessus du fond Nuit.
-const navStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: "var(--space-sm) var(--space-lg)",
-  background: "var(--vynl-abysse)",
-  borderBottom: "1px solid var(--vynl-bordure)",
-};
-
-// Dela Gothic One ne descend jamais sous 24 px (classe .font-brand).
-const brandStyle: React.CSSProperties = {
-  fontSize: "1.5rem",
-  lineHeight: 1.2,
-};

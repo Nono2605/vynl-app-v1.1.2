@@ -34,7 +34,7 @@ export default async function DiscoverPage() {
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New tracks</h2>
         <TrackGrid
           tracks={tracksRes.data}
-          emptyMessage="No tracks published yet — check back soon."
+          emptyMessage="No tracks published yet. Check back soon."
           savedTrackIds={savedTrackIds}
           source={{ context: "discover" }}
         />
@@ -42,7 +42,7 @@ export default async function DiscoverPage() {
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Artists</h2>
-        <ArtistGrid artists={artistsRes.data} emptyMessage="No artists yet — check back soon." />
+        <ArtistGrid artists={artistsRes.data} emptyMessage="No artists yet. Check back soon." />
       </section>
     </div>
   );

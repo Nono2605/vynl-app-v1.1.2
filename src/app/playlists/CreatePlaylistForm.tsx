@@ -12,7 +12,7 @@ export function CreatePlaylistForm() {
         <input
           type="text"
           name="title"
-          placeholder="New playlist name"
+          placeholder="New playlist name" aria-label="New playlist name"
           required
           className="input-field"
           style={{ flex: 1 }}

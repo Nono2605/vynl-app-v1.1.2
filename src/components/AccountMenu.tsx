@@ -87,10 +87,10 @@ const menuStyle: React.CSSProperties = {
   minWidth: 160,
   background: "var(--vynl-abysse)",
   border: "1px solid var(--vynl-bordure)",
-  borderRadius: "var(--radius-sm)",
+  borderRadius: "var(--vynl-rayon-carte)",
   boxShadow: "var(--shadow-card)",
   padding: "0.35rem",
   display: "flex",
   flexDirection: "column",
-  zIndex: 60,
+  zIndex: "var(--z-menu)",
 };

@@ -8,11 +8,11 @@ export default function LoginPage() {
   const [state, action, pending] = useActionState(login, undefined);
 
   return (
-    <div className="bg-signature" style={{ maxWidth: 400, margin: "var(--space-xl) auto", padding: "0 var(--space-md)" }}>
+    <div className="bg-signature surface-calme" style={authPanelStyle}>
       <h1 className="display-title" style={{ marginBottom: "var(--space-md)" }}>Log in</h1>
       <form action={action} style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-        <input type="email" name="email" placeholder="Email" required className="input-field" />
-        <input type="password" name="password" placeholder="Password" required className="input-field" />
+        <input type="email" name="email" placeholder="Email" aria-label="Email" required className="input-field" />
+        <input type="password" name="password" placeholder="Password" aria-label="Password" required className="input-field" />
         {state?.error && <p style={{ color: "var(--vynl-erreur)" }}>{state.error}</p>}
         <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? "Logging in…" : "Log in"}
@@ -27,3 +27,12 @@ export default function LoginPage() {
     </div>
   );
 }
+
+// Panneau « calme » centré : le formulaire se détache du fond, la lueur du
+// bg-signature reste visible autour. La largeur laisse 16 px de chaque côté sur mobile.
+const authPanelStyle: React.CSSProperties = {
+  maxWidth: 440,
+  width: "calc(100% - 2 * var(--space-sm))",
+  margin: "var(--space-xl) auto",
+  padding: "var(--space-lg)",
+};
