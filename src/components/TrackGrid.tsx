@@ -1,5 +1,6 @@
 import { SaveButton } from "@/components/SaveButton";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
+import type { PlaySource } from "@/lib/player/types";
 
 export interface Track {
   id: string;
@@ -13,11 +14,14 @@ export function TrackGrid({
   tracks,
   emptyMessage,
   savedTrackIds,
+  source,
 }: {
   tracks: Track[];
   emptyMessage: string;
   /** Si fourni, affiche le bouton Sauvegarder sur chaque carte. */
   savedTrackIds?: Set<string>;
+  /** D'où viennent les lectures lancées depuis cette grille : enregistré avec chaque écoute. */
+  source?: PlaySource;
 }) {
   if (tracks.length === 0) {
     return <p style={{ color: "var(--vynl-texte-2)" }}>{emptyMessage}</p>;
@@ -62,6 +66,7 @@ export function TrackGrid({
                   coverUrl: track.albums?.cover_url ?? null,
                 }}
                 size={44}
+                source={source}
               />
             </div>
             {savedTrackIds && (

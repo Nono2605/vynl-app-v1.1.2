@@ -60,6 +60,7 @@ export default async function SearchPage({
               tracks={results[0].data}
               emptyMessage={`No tracks match "${query}".`}
               savedTrackIds={savedTrackIds}
+              source={{ context: "search" }}
             />
           </section>
 

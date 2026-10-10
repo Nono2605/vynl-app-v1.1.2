@@ -36,6 +36,7 @@ export default async function DiscoverPage() {
           tracks={tracksRes.data}
           emptyMessage="No tracks published yet — check back soon."
           savedTrackIds={savedTrackIds}
+          source={{ context: "discover" }}
         />
       </section>
 

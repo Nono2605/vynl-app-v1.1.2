@@ -88,6 +88,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             tracks={tracksWithArtist}
             emptyMessage="No tracks published yet."
             savedTrackIds={savedTrackIds}
+            source={{ context: "artist", id: artist.id }}
           />
         </section>
       </div>

@@ -108,6 +108,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                     coverUrl: album.cover_url,
                   }}
                   size={28}
+                  source={{ context: "album", id: album.id }}
                 />
                 <span style={{ flex: 1 }}>{track.title}</span>
                 <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>

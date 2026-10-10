@@ -40,7 +40,12 @@ export default async function LibraryPage() {
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Tracks</h2>
-        <TrackGrid tracks={tracks} emptyMessage="No saved tracks yet." savedTrackIds={savedTrackIds} />
+        <TrackGrid
+          tracks={tracks}
+          emptyMessage="No saved tracks yet."
+          savedTrackIds={savedTrackIds}
+          source={{ context: "library" }}
+        />
       </section>
 
       <section>

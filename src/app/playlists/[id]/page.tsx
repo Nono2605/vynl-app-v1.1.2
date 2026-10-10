@@ -101,6 +101,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                     coverUrl: playlist.cover_url,
                   }}
                   size={28}
+                  source={{ context: "playlist", id: playlist.id }}
                 />
                 <span style={{ flex: 1 }}>
                   {track.title}{" "}

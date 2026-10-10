@@ -2,14 +2,18 @@
 
 import { usePlayer, type PlayerTrack } from "@/lib/player/PlayerContext";
 import { PlayIcon, PauseIcon, SpinnerIcon } from "@/components/icons";
+import type { PlaySource } from "@/lib/player/types";
 
 export function TrackPlayButton({
   track,
   size = 36,
+  source,
 }: {
   track: PlayerTrack;
   /** Diamètre en px — plus petit pour les listes en ligne, plus grand pour les cartes. */
   size?: number;
+  /** D'où vient la lecture (album, playlist, découverte…) : enregistré avec l'écoute. */
+  source?: PlaySource;
 }) {
   const { track: current, isPlaying, isLoading, play, toggle } = usePlayer();
   const isCurrent = current?.id === track.id;
@@ -18,7 +22,7 @@ export function TrackPlayButton({
 
   function handleClick() {
     if (isCurrent) toggle();
-    else play(track);
+    else play(track, source);
   }
 
   return (
