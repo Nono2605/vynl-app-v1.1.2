@@ -1,6 +1,6 @@
 # Vynl — Rémunération des artistes et données associées
 
-> **Statut :** brouillon v0.3 — 9 oct. 2026 (v0.2 : publicité, D9 · v0.3 : D10 à D12 validées)
+> **Statut :** brouillon v0.4 — 9 oct. 2026 (v0.2 : publicité, D9 · v0.3 : D10 à D12 validées · v0.4 : table `plays` et suivi par battements implémentés)
 > **Décisions :** @Nono · **Rédaction :** avec Claude
 > **Portée :** ce qu'il faut enregistrer et calculer pour (1) payer les artistes, (2) produire des statistiques, (3) prouver où va l'argent des abonnés.
 
@@ -165,22 +165,55 @@ et rejoue sur la même URL sans rappeler le serveur : compter à la délivrance 
 les rejeux et serait facile à contourner. On compte donc des **battements de cœur** envoyés par
 le lecteur et **validés par le serveur**.
 
-### 6.2 Protocole *(proposé)*
+### 6.2 Protocole *(implémenté, étape 2 — non déployé)*
 
-1. `POST /plays` — `{ track_id, source_context, source_id, client_session_id }`
+1. `POST /plays` — `{ track_id, source_context?, source_id?, client_session_id?, app_version? }`
    → `{ play_id, url, format, heartbeat_every_seconds }`. Remplace `/tracks/:id/stream` pour
-   la lecture ; crée la ligne de lecture.
-2. `POST /plays/:id/heartbeat` — `{ seq, position_seconds, state }` environ toutes les 15 s,
-   et à chaque pause, changement de morceau ou fin.
-3. Le serveur calcule à chaque battement :
-   `validées += min(Δposition, Δtemps_serveur)`, plafonné à la durée du morceau.
-4. `seq` croissant et `play_id` côté serveur rendent les battements **idempotents** (un
-   réseau instable ne double-compte pas).
-5. Une lecture non terminée proprement (onglet fermé) est clôturée par le serveur après un
-   délai sans battement ; les secondes déjà validées sont conservées.
+   la lecture. Le serveur **copie** dans la lecture l'artiste, l'album et la durée du morceau,
+   fige le droit d'écoute (`entitlement`) et **ferme l'éventuelle lecture précédente** du
+   compte. `client_session_id` rend la requête rejouable : la même requête renvoie la même
+   lecture (200), et `409` si elle est déjà close.
+2. `POST /plays/:id/heartbeat` — `{ seq, position_seconds, state }`, `state` ∈ `playing`,
+   `paused`, `ended` (morceau terminé), `closed` (changement de morceau, arrêt). Le lecteur
+   en envoie au démarrage réel de la lecture, toutes les 15 s, à la pause, à la reprise,
+   **avant et après** chaque saut dans le morceau, à la fin, et à la fermeture. Réponse `200`
+   avec un `status` : `ok`, `duplicate`, `closed` (lecture déjà close : le client doit
+   s'arrêter) ou `conflict` (un autre battement est passé en même temps).
+3. **Règle de calcul** (`API/src/modules/plays/heartbeat.ts`, fonction pure, 23 tests). Le
+   temps écoulé depuis le battement précédent n'est crédité que si **celui-ci** disait
+   `playing`, et au plus :
+   - l'avancée de la position (un saut en arrière ne rapporte rien) ;
+   - le temps réellement écoulé côté serveur : au plus 1 s par seconde, donc une lecture
+     accélérée ou un client qui ment ne crée pas de secondes.
+   Le total d'une lecture est plafonné à la durée du morceau (4 h si elle est inconnue) :
+   se replacer sans cesse au début ne gonfle rien ; réécouter ouvre une nouvelle lecture.
+   **Un battement perdu ne fait rien perdre** : le suivant crédite tout l'intervalle d'après la
+   position atteinte.
+4. **Qualification** : au battement qui atteint 30 s (D1). Pour un morceau de moins de 30 s :
+   sa durée moins 1 s de tolérance (le dernier battement arrive un peu avant la fin).
+5. **Idempotence** : `seq` strictement croissant par lecture ; un battement déjà vu ou plus
+   ancien est ignoré. La mise à jour est conditionnelle (`last_seq` inchangé), et chaque
+   battement est tracé dans `play_heartbeats` (échec de la trace sans effet sur la mesure).
+6. **Un seul flux par compte, imposé par la base** : index unique sur les lectures ouvertes
+   d'un compte. Démarrer un morceau en ferme un autre ; la fin retenue est le **dernier
+   battement reçu**, pas « maintenant ». Si le serveur répond `closed` à un battement alors
+   que le lecteur joue, un autre appareil a pris le relais : le lecteur se met en pause avec
+   un message.
+7. **Reprise après panne** (URL signée expirée, réseau coupé) : le lecteur ferme la lecture
+   et en ouvre une nouvelle à la même position. Les secondes s'additionnent bien, mais le
+   morceau compte alors pour deux lectures dans les statistiques « nombre d'écoutes ».
 
-Le lecteur de la webapp pilote déjà son état par les événements `<audio>` (`play`, `pause`,
-`ended`, `waiting`, `timeupdate`) : y brancher ces battements est direct.
+**Limites connues :**
+- À la **fermeture brutale de l'onglet**, les secondes écoulées depuis le dernier battement
+  (15 s au plus) ne sont pas comptées : un battement de dernière seconde (`sendBeacon`)
+  demanderait un appel direct du navigateur à l'API, donc une configuration CORS que je ne
+  peux pas vérifier d'ici.
+- `ip_hash`, `country_code` et `device_type` existent mais **ne sont pas encore remplis** :
+  la webapp appelle l'API depuis son serveur, donc l'adresse vue par l'API est celle du
+  serveur, pas celle de l'utilisateur. À faire en transmettant les en-têtes du visiteur.
+- `play_heartbeats` n'a pas encore de **purge** (conservation courte, Q10).
+- L'ancienne route `GET /tracks/:id/stream` existe encore et **ne compte rien** : à
+  supprimer dès que la webapp est déployée sur `POST /plays`.
 
 ### 6.3 Garde-fous anti-fraude *(proposé)*
 
@@ -306,8 +339,8 @@ Les montants d'impressions sont en micro-unités (section 7, unité des montants
 
 | Table actuelle | Verdict |
 |---|---|
-| `listening_sessions` | **Étendre** → `plays` (secondes validées, copies figées, qualification, exclusion). La colonne `entitlement` (D12) est **déjà ajoutée** |
-| `listening_events` | **Garder** comme `play_heartbeats`, avec durée de conservation courte |
+| `listening_sessions` | **Fait** : renommée `plays` et étendue (secondes validées, copies figées, qualification, exclusion, suivi par battements) par la migration `20261009000002_plays.sql`. `entitlement` (D12) y est déjà |
+| `listening_events` | **Fait** : remplacée par `play_heartbeats` (la migration refuse de la supprimer si elle contient des lignes). Durée de conservation courte, purge à écrire |
 | `royalty_periods` | **Garder et étendre** (statut, paramètres, runs) |
 | `royalty_allocations` | **Remplacer** : décrit un pot global par morceau/artiste, donc le modèle *pooled* que la page transparency critique. Remplacé par relevés d'abonnés et lignes par artiste |
 | `creator_wallets` | **Remplacer** par un solde dérivé du journal |
@@ -432,9 +465,21 @@ Issus du contrôle du 9 oct. 2026 (voir le rapport du même jour) :
      retiré), ne touche que les fichiers jamais mesurés, rejouable. À lancer **après** la migration
      et le déploiement de l'API : d'abord en simulation, puis un morceau (`--track`), puis tout.
 2. **Lectures** : table `plays`, routes `POST /plays` et battements, instrumentation du
-   lecteur. La bêta commence alors à collecter. Le champ `entitlement` (D12) est **déjà créé** ;
-   l'API doit le renseigner à chaque lecture (toutes celles de la bêta valent `beta`), sans
-   valeur par défaut. Les montants de cette étape et des suivantes suivent D10 (micro-unités).
+   lecteur. La bêta commence alors à collecter. Le champ `entitlement` (D12) est renseigné à
+   chaque lecture, sans valeur par défaut. Les montants de cette étape et des suivantes
+   suivent D10 (micro-unités).
+   **État (9 oct. 2026) : implémentée et testée, pas encore déployée.**
+   - **Base :** migration `API/supabase/migrations/20261009000002_plays.sql` (testée sur base
+     jetable : rejouable, conserve une ligne d'écoute existante, un seul flux ouvert par compte).
+   - **API :** `modules/plays` (routes + règle de calcul pure), `lib/entitlement.ts`
+     (`ENTITLEMENT_MODE` : `beta` par défaut, `live` déduit de l'abonnement), `lib/clock.ts`.
+   - **Webapp :** le lecteur démarre chaque lecture côté serveur et envoie ses battements ;
+     l'origine de la lecture (album, playlist, artiste, découverte, recherche, bibliothèque)
+     est enregistrée avec l'écoute.
+   - **Ordre de déploiement : migration, puis API, puis webapp.** Une webapp déployée avant
+     l'API appellerait une route inexistante et le lecteur ne démarrerait plus.
+   - **Reste à faire** (limites de la section 6.2) : adresse et pays du visiteur, purge des
+     battements, suppression de `GET /tracks/:id/stream`, statistiques de lecture côté créateur.
 3. **Argent entrant** : `plans` (dont le plan gratuit `ad_supported`), `payments`, branchement
    du prestataire de paiement.
 4. **Calcul** : paramètres de période, runs, relevés d'abonnés, revenus d'artistes, pool.
