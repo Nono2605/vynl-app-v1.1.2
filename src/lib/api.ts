@@ -14,6 +14,8 @@ export class ApiError extends Error {
 interface ApiOptions {
   accessToken?: string;
   cache?: RequestCache;
+  /** En-têtes supplémentaires (ex. les infos du visiteur transmises à POST /plays). */
+  headers?: Record<string, string>;
 }
 
 async function request<T>(
@@ -22,7 +24,7 @@ async function request<T>(
   body?: unknown,
   opts: ApiOptions = {}
 ): Promise<T> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...opts.headers };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.accessToken) headers["Authorization"] = `Bearer ${opts.accessToken}`;
 

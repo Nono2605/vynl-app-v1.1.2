@@ -208,9 +208,16 @@ le lecteur et **validés par le serveur**.
   (15 s au plus) ne sont pas comptées : un battement de dernière seconde (`sendBeacon`)
   demanderait un appel direct du navigateur à l'API, donc une configuration CORS que je ne
   peux pas vérifier d'ici.
-- `ip_hash`, `country_code` et `device_type` existent mais **ne sont pas encore remplis** :
-  la webapp appelle l'API depuis son serveur, donc l'adresse vue par l'API est celle du
-  serveur, pas celle de l'utilisateur. À faire en transmettant les en-têtes du visiteur.
+- `ip_hash`, `country_code` et `device_type` : la webapp appelle l'API depuis son serveur,
+  donc l'adresse vue par l'API est celle du serveur. **Fait (10 oct. 2026, non déployé) :**
+  la webapp transmet le pays (`x-vercel-ip-country`, absent en local), le user-agent et l'IP du
+  visiteur sous `x-vynl-client-*` (`src/app/actions/player.ts`) ; l'API (`lib/clientInfo.ts`)
+  en tire un pays ISO, un appareil (`mobile` / `tablet` / `desktop`) et une **empreinte d'IP
+  salée dont le sel change chaque jour** (`IP_HASH_SECRET`, facultatif : sans lui `ip_hash`
+  reste vide ; l'IP elle-même n'est jamais stockée). **Limite assumée :** ces en-têtes sont
+  *déclarés* par l'appelant, l'API ne peut pas les vérifier. Suffisant pour des statistiques ;
+  **avant de répartir un revenu publicitaire par pays (D9), authentifier la webapp** (secret
+  partagé). Les lectures d'avant le déploiement restent sans pays ni appareil (« Inconnu »).
 - `play_heartbeats` n'a pas encore de **purge** (conservation courte, Q10).
 - L'ancienne route `GET /tracks/:id/stream` existe encore et **ne compte rien** : à
   supprimer dès que la webapp est déployée sur `POST /plays`.
@@ -478,8 +485,19 @@ Issus du contrôle du 9 oct. 2026 (voir le rapport du même jour) :
      est enregistrée avec l'écoute.
    - **Ordre de déploiement : migration, puis API, puis webapp.** Une webapp déployée avant
      l'API appellerait une route inexistante et le lecteur ne démarrerait plus.
-   - **Reste à faire** (limites de la section 6.2) : adresse et pays du visiteur, purge des
-     battements, suppression de `GET /tracks/:id/stream`, statistiques de lecture côté créateur.
+   - **Statistiques de lecture côté créateur (10 oct. 2026, non déployées) :** migration
+     `API/supabase/migrations/20261010000000_creator_stats.sql` (4 fonctions SQL en lecture
+     seule, réservées à `service_role`, testées sur base jetable : bornes de fenêtre, lectures
+     exclues ou non qualifiées, compte anonymisé, isolation entre artistes, jours en UTC), route
+     `GET /creator/stats?range=7d|30d|90d[&track_id=]`, pages Overview / Audience / Analytics /
+     détail d'un morceau du Studio. Définitions : une **écoute** = lecture comptée et qualifiée
+     (30 s) ; **auditeurs** = comptes distincts (un compte supprimé n'est plus compté comme
+     auditeur, ses écoutes restent) ; **temps d'écoute** = secondes validées des écoutes
+     qualifiées. Tant que la migration n'est pas appliquée, la route répond 503 et le Studio
+     affiche « Coming ». **Ordre de déploiement : migration `…creator_stats`, puis API, puis
+     Studio.**
+   - **Reste à faire** (limites de la section 6.2) : purge des battements, suppression de
+     `GET /tracks/:id/stream`, déploiement de ce qui précède.
 3. **Argent entrant** : `plans` (dont le plan gratuit `ad_supported`), `payments`, branchement
    du prestataire de paiement.
 4. **Calcul** : paramètres de période, runs, relevés d'abonnés, revenus d'artistes, pool.
