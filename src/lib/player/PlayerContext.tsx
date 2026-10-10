@@ -100,8 +100,10 @@ function newClientSessionId(): string {
 // les ~15 s, à la pause, à la reprise, aux sauts, à la fin. Le serveur en tire
 // les secondes écoutées ; le client n'en déclare aucune. Un battement perdu ne
 // fait rien perdre : le suivant crédite tout l'intervalle d'après la position.
-// Limite connue : à la fermeture brutale de l'onglet, les secondes écoulées
-// depuis le dernier battement (15 s au plus) ne sont pas comptées.
+// Fermeture ou rechargement de la page : un dernier battement « closed » part en
+// beacon (/api/plays/close) pour clore la lecture et créditer les secondes depuis
+// le dernier battement. Seule une coupure brutale (crash, batterie, réseau) laisse
+// la lecture ouverte ; elle est alors close au prochain démarrage, sans ces secondes.
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const trackRef = useRef<PlayerTrack | null>(null);
@@ -139,6 +141,38 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => stopBeatTimer, [stopBeatTimer]);
+
+  // La page part (fermeture, rechargement, navigation hors de l'app) : on clôt la
+  // lecture par un beacon, que le navigateur envoie même si la page disparaît.
+  // pagehide plutôt que beforeunload/unload : c'est le seul événement fiable sur
+  // mobile et avec le cache de navigation arrière/avant. Si la page revient de ce
+  // cache, playIdRef est nul : le prochain clic sur Lecture ouvre une nouvelle lecture.
+  useEffect(() => {
+    function closeOnLeave() {
+      const playId = playIdRef.current;
+      const audio = audioRef.current;
+      if (!playId || !audio) return;
+
+      const position = Number.isFinite(audio.currentTime) ? Math.round(audio.currentTime * 1000) / 1000 : 0;
+      const body = JSON.stringify({ play_id: playId, seq: ++seqRef.current, position_seconds: position });
+      const sent = navigator.sendBeacon?.("/api/plays/close", new Blob([body], { type: "application/json" }));
+      if (!sent) {
+        void fetch("/api/plays/close", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body,
+          keepalive: true,
+        }).catch(() => {});
+      }
+
+      stopBeatTimer();
+      playIdRef.current = null;
+      beatStateRef.current = null;
+    }
+
+    window.addEventListener("pagehide", closeOnLeave);
+    return () => window.removeEventListener("pagehide", closeOnLeave);
+  }, [stopBeatTimer]);
 
   // Envoie un battement. Ne bloque jamais l'écoute et n'échoue jamais.
   const beat = useCallback(

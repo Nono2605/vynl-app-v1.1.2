@@ -204,10 +204,13 @@ le lecteur et **validés par le serveur**.
    morceau compte alors pour deux lectures dans les statistiques « nombre d'écoutes ».
 
 **Limites connues :**
-- À la **fermeture brutale de l'onglet**, les secondes écoulées depuis le dernier battement
-  (15 s au plus) ne sont pas comptées : un battement de dernière seconde (`sendBeacon`)
-  demanderait un appel direct du navigateur à l'API, donc une configuration CORS que je ne
-  peux pas vérifier d'ici.
+- **Fermeture ou rechargement de la page : fait (10 oct. 2026, non déployé).** Au `pagehide`, le
+  lecteur envoie un dernier battement `closed` en `sendBeacon` vers `/api/plays/close` (route de la
+  webapp, même origine donc sans CORS), qui le transmet à l'API avec la session du cookie. La
+  lecture est close et les secondes depuis le dernier battement sont créditées. Reste la
+  **coupure brutale** (crash, batterie, réseau) : la lecture reste ouverte jusqu'au prochain
+  démarrage du compte, qui la clôt à la position du dernier battement reçu (15 s au plus perdues).
+  Une lecture ouverte depuis plus de 2 min est affichée comme terminée dans l'admin.
 - `ip_hash`, `country_code` et `device_type` : la webapp appelle l'API depuis son serveur,
   donc l'adresse vue par l'API est celle du serveur. **Fait (10 oct. 2026, non déployé) :**
   la webapp transmet le pays (`x-vercel-ip-country`, absent en local), le user-agent et l'IP du
