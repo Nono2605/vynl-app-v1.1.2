@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
@@ -50,6 +51,16 @@ export default async function AccountPage() {
           explicitContent={me.profile?.explicit_content ?? true}
           favoriteGenres={me.profile?.favorite_genres ?? []}
         />
+      </section>
+
+      <section className="surface-calme" style={{ padding: "var(--space-lg)" }}>
+        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-sm)" }}>Privacy &amp; data</h2>
+        <p style={{ color: "var(--vynl-texte-2)", marginBottom: "var(--space-sm)" }}>
+          What we collect, your choices and your rights.
+        </p>
+        <Link href="/account/privacy" className="text-link">
+          Open Privacy &amp; data
+        </Link>
       </section>
 
       <section className="surface-calme" style={{ padding: "var(--space-lg)" }}>

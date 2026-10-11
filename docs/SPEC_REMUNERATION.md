@@ -450,6 +450,24 @@ Issus du contrôle du 9 oct. 2026 (voir le rapport du même jour) :
 
 ---
 
+## 12 bis. Vie privée et consentement *(proposé, 11 oct. 2026 — à valider par un juriste)*
+
+Marchés visés au lancement : **Suisse et UE**, donc le régime le plus strict (consentement
+préalable pour la publicité et les traceurs tiers). Détail et inventaire : `PRIVACY_POLICY_DRAFT.md`.
+
+| # | Sujet | Proposition |
+|---|---|---|
+| P1 | Géographie | **Pays et région du monde seulement**, jamais la ville. La région se déduit du pays (nomenclature M49 + UE + Suisse). |
+| P2 | « Qui écoute quoi » | **Agrégé** par défaut. L'historique d'UN compte ne s'ouvre qu'à un admin (double facteur), via une page dont l'ouverture est **écrite au journal d'audit avant l'affichage**. |
+| P3 | Consentements | Table `consents` : une ligne par décision, **jamais modifiée** (trigger) ; l'état actuel est la ligne la plus récente de chaque finalité ; version du texte et origine enregistrées. Finalités obligatoires : `terms` (conditions + politique, pour la version affichée) et `age_16`. Finalités facultatives (`ads_personalization`, `analytics`) : **non demandées tant qu'on ne les active pas**. |
+| P4 | Âge | Case « j'ai au moins 16 ans » (valeur prudente UE ; la finalité porte le seuil, donc le relever redemande). Aucune publicité pour les mineurs (Q14). |
+| P5 | Nouvelle version du texte | Une étiquette de version ; chaque nouvelle version redemande les conditions (pas l'âge). |
+| P6 | Écran d'accueil | Derrière l'interrupteur `PRIVACY_GATE`, **éteint** tant que la politique n'est pas publiée. Le cookie « version acceptée » n'est posé qu'après vérification auprès de l'API. |
+| P7 | Conservation (Q10) | Battements bruts : **30 jours** ; empreinte d'IP : **30 jours** ; les écoutes ne sont pas supprimées (pièces de la rémunération). Fonction `privacy_retention_run`, **non planifiée** tant que les durées ne sont pas confirmées. |
+| P8 | Cookies | Aujourd'hui : session d'authentification seulement. Le site vitrine et les apps restent **sans traceur tiers** ; un bandeau n'est nécessaire qu'avec la publicité ou un outil de mesure tiers. |
+
+---
+
 ## 13. Étapes de mise en œuvre
 
 1. **Migration corrective « sans regret »** : clés étrangères protégées, garde-fous sur le
