@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
+import { billingEnabled, formatPrice, type BillingPlan } from "@/lib/billing";
+import { PortalForm, SubscribeForm } from "./BillingButtons";
 import { PasswordForm } from "./PasswordForm";
 import { PreferencesForm } from "./PreferencesForm";
 
@@ -20,7 +22,7 @@ interface Subscription {
   current_period_end: string | null;
 }
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ checkout?: string }> }) {
   const supabase = await createClient();
   const {
     data: { session },
@@ -34,6 +36,19 @@ export default async function AccountPage() {
     api.get<Me>("/me", { accessToken: session.access_token }),
     api.get<{ subscription: Subscription | null }>("/subscriptions/me", { accessToken: session.access_token }),
   ]);
+
+  // Boutons d'achat : seulement si l'interrupteur BILLING_UI est « on ». Une API qui ne répond pas
+  // ou pas encore prête n'empêche jamais d'afficher la page : on n'affiche simplement pas l'offre.
+  const billing = billingEnabled();
+  const checkout = (await searchParams).checkout;
+  const premium = billing
+    ? await api
+        .get<{ plans: BillingPlan[] }>("/billing/plans", { accessToken: session.access_token })
+        .then((result) => result.plans.find((plan) => plan.purchasable) ?? null)
+        .catch(() => null)
+    : null;
+  // Un abonnement Stripe en cours (actif, essai, paiement en retard) se gère dans le portail.
+  const managed = subscription !== null && ["active", "trialing", "past_due"].includes(subscription.status);
 
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
@@ -73,6 +88,33 @@ export default async function AccountPage() {
           </p>
         ) : (
           <p style={{ color: "var(--vynl-texte-2)" }}>No active subscription yet.</p>
+        )}
+
+        {checkout === "success" && (
+          <p style={{ color: "var(--vynl-cyan)", marginTop: "var(--space-sm)" }}>
+            Thank you! Your subscription is being activated: it can take a few seconds to appear here.
+          </p>
+        )}
+        {checkout === "cancelled" && (
+          <p style={{ color: "var(--vynl-texte-2)", marginTop: "var(--space-sm)" }}>Checkout cancelled: nothing was charged.</p>
+        )}
+
+        {billing && (
+          <div style={{ marginTop: "var(--space-md)" }}>
+            {managed ? (
+              <PortalForm />
+            ) : premium ? (
+              <>
+                <SubscribeForm
+                  plan={premium.code}
+                  label={`Go ${premium.name}: ${formatPrice(premium.price_cents, premium.currency)} / ${premium.interval}`}
+                />
+                <p style={{ color: "var(--vynl-texte-3)", fontSize: "0.8125rem", marginTop: "var(--space-xs)" }}>
+                  {premium.tax_behavior === "inclusive" ? "Tax included. " : ""}Cancel any time from here.
+                </p>
+              </>
+            ) : null}
+          </div>
         )}
       </section>
     </div>
