@@ -1341,9 +1341,8 @@ textarea {
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   align-items: center;
   gap: var(--space-lg);
-  /* Bas : le hero ne doit pas occuper tout l'écran, sinon la rangée de nouveautés qui le suit
-     tombe sous la ligne de flottaison et personne ne la voit sans faire défiler. */
-  padding: clamp(20px, 3.5vh, 40px) var(--space-lg) clamp(20px, 3vh, 32px);
+  min-height: min(76vh, 740px);
+  padding: clamp(32px, 6vh, 72px) var(--space-lg) clamp(40px, 8vh, 96px);
   overflow-x: clip;
   isolation: isolate;
   background:
@@ -1376,7 +1375,7 @@ textarea {
 }
 .hero__title {
   font-family: var(--vynl-police-marque);
-  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
   font-weight: 400;
   line-height: 1.02;
   letter-spacing: -0.03em;
@@ -1404,8 +1403,8 @@ textarea {
   color: transparent;
 }
 .hero__lead {
-  max-width: 38rem;
-  margin-top: var(--space-sm);
+  max-width: 34rem;
+  margin-top: var(--space-md);
   color: var(--vynl-texte-2);
   font-size: clamp(1.0625rem, 1.5vw, 1.1875rem);
 }
@@ -1414,17 +1413,17 @@ textarea {
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-sm);
-  margin-top: var(--space-sm);
+  margin-top: var(--space-md);
 }
 .hero__latest {
-  margin-top: var(--space-sm);
+  margin-top: var(--space-md);
   color: var(--vynl-texte-2);
   font-size: 0.875rem;
 }
 .hero__disc {
   justify-self: end;
-  width: min(100%, 380px);
-  margin-right: calc(var(--space-lg) * -0.8);
+  width: min(100%, 640px);
+  margin-right: calc(var(--space-lg) * -1.2);
 }
 @media (prefers-reduced-motion: no-preference) {
   .w > span {
@@ -1449,20 +1448,14 @@ textarea {
 @media (max-width: 860px) {
   .hero {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0;
+    min-height: 0;
+    gap: var(--space-md);
   }
-  /* Le disque passe derrière le texte, estompé et rogné à droite : il garde sa place dans
-     la page sans pousser la rangée de nouveautés hors de l'écran. */
   .hero__disc {
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    right: -36vw;
-    width: 84vw;
+    justify-self: center;
+    width: 112vw;
     max-width: none;
-    margin: 0;
-    opacity: 0.38;
-    pointer-events: none;
+    margin: 0 -6vw;
   }
 }
 
