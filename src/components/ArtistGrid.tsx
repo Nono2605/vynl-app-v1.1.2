@@ -28,8 +28,10 @@ export function ArtistGrid({ artists, emptyMessage }: { artists: Artist[]; empty
           href={`/artists/${artist.slug}`}
           className="hover-card"
           style={{ textAlign: "center" }}
+          data-reveal
         >
           <div
+            data-tilt
             style={{
               width: "100%",
               aspectRatio: "1",

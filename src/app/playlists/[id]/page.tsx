@@ -5,6 +5,7 @@ import { formatDuration } from "@/lib/formatDuration";
 import { removeTrackFromPlaylist, deletePlaylist } from "@/app/actions/playlists";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
 import { PlayAllButton } from "@/components/PlayAllButton";
+import { TrackIndex } from "@/components/TrackIndex";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { PlaylistVisibilityToggle } from "@/components/PlaylistVisibilityToggle";
 import { AddTrackSearch } from "./AddTrackSearch";
@@ -104,7 +105,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                   borderBottom: "1px solid var(--vynl-bordure)",
                 }}
               >
-                <span style={{ color: "var(--vynl-texte-3)", fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>{index + 1}</span>
+                <TrackIndex id={track.id} n={index + 1} />
                 <TrackPlayButton
                   track={queue[index]}
                   size={28}

@@ -94,6 +94,7 @@
 
   /* Animations : lentes et fluides (200 à 300 ms, courbe douce). */
   --transition-base: 0.25s ease;
+  --vynl-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Hauteur réservée en bas de page pour le lecteur (position: fixed) —
      évite que le contenu passe dessous, même avant la première lecture. */
@@ -103,6 +104,7 @@
   --z-header: 40;
   --z-player: 50;
   --z-menu: 60;
+  --z-overlay: 70;
   --z-skip: 100;
 }
 
@@ -607,6 +609,40 @@ textarea {
 .skip-btn:disabled:hover {
   transform: none;
 }
+/* Bouton « morceau en cours » : mini-disque + titre ; il ouvre la platine. */
+.player-bar__open {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.player-bar__disc {
+  display: block;
+  width: 52px;
+  flex: none;
+  transition: transform var(--transition-base);
+}
+.player-bar__open:hover .player-bar__disc {
+  transform: scale(1.06);
+}
+.seek-time {
+  flex: none;
+  width: 36px;
+  color: var(--vynl-texte-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.seek-time--elapsed {
+  text-align: right;
+}
 .player-bar__seek {
   display: flex;
   align-items: center;
@@ -772,4 +808,736 @@ textarea {
 .vinyl-cover--sm .vinyl-cover__label {
   width: 22%;
   border-width: 1px;
+}
+
+/* ---------------------------------------------------------------------
+   Le disque (Record) : repris du site vitrine. L'arc cyan est la position
+   dans le morceau. Les tailles sont en cqw (1 % de la largeur du disque) pour
+   que les sillons suivent la taille, du mini-disque du lecteur à la platine.
+   --------------------------------------------------------------------- */
+.record {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  container-type: inline-size;
+  isolation: isolate;
+}
+.record > * {
+  position: absolute;
+  inset: 0;
+}
+.record__disc {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle closest-side, transparent 0 95.5%, #02030c 95.5%),
+    repeating-radial-gradient(circle closest-side, transparent 0 2.56cqw, rgba(50, 66, 140, 0.75) 2.56cqw 2.68cqw),
+    repeating-radial-gradient(circle closest-side, #0b1130 0 0.17cqw, #101946 0.17cqw 0.37cqw);
+  box-shadow: 0 6cqw 12cqw -2cqw rgba(0, 4, 40, 0.9), 0 0 0 1px rgba(50, 66, 140, 0.6);
+}
+/* Ce qui tourne : la pochette (disque picture) ou l'étiquette dégradée. */
+.record__spin {
+  inset: 9%;
+  border-radius: 50%;
+  overflow: hidden;
+  will-change: transform;
+}
+.record__spin--label {
+  inset: 33%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.record__cover,
+.record__label {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.record__cover {
+  object-fit: cover;
+  background: var(--vynl-nuit);
+}
+.record__text {
+  fill: var(--vynl-nuit);
+  font-family: var(--vynl-police-texte);
+  font-size: 5px;
+  font-weight: 600;
+}
+/* Ce qui ne tourne pas : sillons par-dessus la pochette, reflet, axe. */
+.record__grooves {
+  inset: 9%;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(5, 8, 22, 0.42) 100%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 0.3cqw, rgba(5, 8, 22, 0.2) 0.3cqw 0.4cqw);
+}
+.record__spin--label ~ .record__grooves {
+  display: none;
+}
+.record__sheen {
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(
+    from 35deg,
+    transparent 0 8%,
+    rgba(144, 191, 233, 0.22) 14%,
+    transparent 22% 58%,
+    rgba(144, 191, 233, 0.12) 64%,
+    transparent 72%
+  );
+}
+.record__spindle {
+  inset: 47.6%;
+  border-radius: 50%;
+  background: var(--vynl-nuit);
+  box-shadow: 0 0 0 0.5cqw rgba(50, 66, 140, 0.9);
+}
+.record__spin:not(.record__spin--label) ~ .record__spindle {
+  box-shadow: 0 0 0 1.6cqw var(--vynl-bleu), 0 0 0 2cqw rgba(5, 8, 22, 0.85);
+}
+/* Anneau de progression : piste Sillon, arc cyan, tête blanche au bout de l'arc. */
+.record__ring {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.record__track {
+  fill: none;
+  stroke: var(--vynl-sillon);
+  stroke-width: var(--ring-w, 0.6);
+}
+.record__arc {
+  fill: none;
+  stroke: var(--vynl-cyan);
+  stroke-width: calc(var(--ring-w, 0.6) * 1.8);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  filter: drop-shadow(0 0 1.5px rgba(25, 227, 255, 0.7));
+  transition: stroke-dashoffset 0.5s linear;
+}
+.record__head {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transition: transform 0.5s linear;
+}
+.record__head circle {
+  fill: #fff;
+}
+.record--sm {
+  --ring-w: 2.4;
+}
+.record--sm .record__disc {
+  background: radial-gradient(circle closest-side, #0b1130 0 95.5%, #02030c 95.5%);
+}
+.record--sm .record__grooves {
+  background: radial-gradient(circle at 50% 50%, transparent 58%, rgba(5, 8, 22, 0.42) 100%);
+}
+.record--sm .record__arc {
+  filter: none;
+}
+
+/* Décor (accueil) : l'arc avance tout seul, comme sur le site. */
+@keyframes record-progress {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes record-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .record--idle .record__arc {
+    animation: record-progress 42s linear infinite;
+    animation-delay: -16s;
+  }
+  .record--idle .record__head {
+    animation: record-orbit 42s linear infinite;
+    animation-delay: -16s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .record--idle .record__arc {
+    stroke-dashoffset: 62;
+  }
+  .record--idle .record__head {
+    transform: rotate(137deg);
+  }
+  .record__arc,
+  .record__head {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   La platine (NowPlaying) : le morceau en cours en plein écran.
+   Une seule lueur : le halo bleu derrière le disque.
+   --------------------------------------------------------------------- */
+.np {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-lg);
+  padding: clamp(24px, 5vw, 72px);
+  overflow-y: auto;
+  isolation: isolate;
+  background: var(--vynl-nuit);
+}
+/* Sillons en filigrane derrière le disque, comme sur le site. */
+.np::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -22vmin;
+  top: 50%;
+  width: 140vmin;
+  aspect-ratio: 1;
+  translate: 0 -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: repeating-radial-gradient(circle closest-side, transparent 0 11px, rgba(144, 191, 233, 0.06) 11px 12px);
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 25%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 25%, transparent 100%);
+}
+.np__glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(48vmin 48vmin at 30% 50%, rgba(0, 89, 249, 0.4), transparent 72%);
+}
+.np__close {
+  position: absolute;
+  top: clamp(16px, 3vw, 32px);
+  right: clamp(16px, 3vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--vynl-sillon);
+  border-radius: 50%;
+  background: var(--vynl-verre);
+  -webkit-backdrop-filter: var(--vynl-flou-verre);
+  backdrop-filter: var(--vynl-flou-verre);
+  color: var(--vynl-texte);
+  cursor: pointer;
+}
+.np__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  perspective: 1400px;
+}
+.np__disc {
+  width: min(100%, 78vh, 640px);
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.4s var(--vynl-ease-out);
+}
+.np__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 520px;
+}
+.np__eyebrow {
+  color: var(--vynl-cyan);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* Titre saisi par un créateur : Sora, jamais Dela Gothic One (trop large). */
+.np__title {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.np__artist {
+  color: var(--vynl-texte-2);
+  font-size: 1.125rem;
+}
+.np__seek {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: var(--space-md);
+}
+.np__controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: var(--space-sm);
+}
+.np__play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border: none;
+  border-radius: 50%;
+  background: var(--vynl-degrade-vague);
+  box-shadow: var(--vynl-lueur), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: #fff;
+  cursor: pointer;
+}
+.np__play:disabled {
+  cursor: default;
+}
+.skip-btn--lg {
+  width: 52px;
+  height: 52px;
+}
+.np__error {
+  margin-top: var(--space-sm);
+  color: var(--vynl-erreur);
+  font-size: 0.875rem;
+}
+.np__queue {
+  margin-top: var(--space-lg);
+}
+.np__queue-title {
+  margin-bottom: 0.5rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.np__queue ol {
+  list-style: none;
+}
+.np__queue-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  border-radius: var(--vynl-rayon-carte);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+.np__queue-row:hover:not(:disabled) {
+  background: var(--vynl-vinyle);
+}
+.np__queue-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.np__queue-name,
+.np__queue-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.np__queue-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.np__queue-artist {
+  color: var(--vynl-texte-2);
+  font-size: 0.8125rem;
+}
+.np__more {
+  margin: 0.25rem 0 0 0.5rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 860px) {
+  .np {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: var(--space-md);
+    padding: 72px var(--space-lg) var(--space-lg);
+  }
+  .np__disc {
+    width: min(100%, 52vh);
+  }
+  .np__info {
+    max-width: none;
+  }
+}
+
+/* Entrée : la platine se fond, le disque arrive en tournant, les textes montent
+   l'un après l'autre. translate / scale / rotate sont des propriétés séparées de
+   transform : elles ne gênent pas l'inclinaison au curseur. */
+@keyframes np-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes np-disc-in {
+  from {
+    opacity: 0;
+    scale: 0.84;
+    rotate: -28deg;
+  }
+}
+@keyframes np-rise {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .np {
+    animation: np-in 0.35s var(--vynl-ease-out) both;
+  }
+  .np__disc {
+    animation: np-disc-in 1s var(--vynl-ease-out) both;
+  }
+  .np__info > * {
+    animation: np-rise 0.7s var(--vynl-ease-out) both;
+  }
+  .np__info > :nth-child(2) { animation-delay: 0.08s; }
+  .np__info > :nth-child(3) { animation-delay: 0.14s; }
+  .np__info > :nth-child(4) { animation-delay: 0.2s; }
+  .np__info > :nth-child(5) { animation-delay: 0.26s; }
+  .np__info > :nth-child(6) { animation-delay: 0.32s; }
+  .np__info > :nth-child(7) { animation-delay: 0.38s; }
+}
+
+/* ---------------------------------------------------------------------
+   Mouvement partagé : apparition au défilement ([data-reveal]), inclinaison
+   au curseur ([data-tilt]), numéro de morceau / égaliseur. Rien ne bouge avec
+   « réduire les animations » ; sans JavaScript, <noscript> (layout) remet tout
+   visible. translate et opacity seulement : pas de conflit avec les transform
+   des survols.
+   --------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    translate: 0 18px;
+    /* transform garde sa transition : les cartes (.hover-card) se soulèvent au survol. */
+    transition:
+      opacity 0.6s var(--vynl-ease-out),
+      translate 0.6s var(--vynl-ease-out),
+      transform var(--transition-base);
+  }
+  [data-reveal].is-visible {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-tilt] {
+    transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transition: transform 0.35s var(--vynl-ease-out);
+  }
+}
+
+.track-index {
+  display: inline-flex;
+  justify-content: flex-end;
+  width: 24px;
+  color: var(--vynl-texte-3);
+  font-variant-numeric: tabular-nums;
+}
+.track-index[data-active] {
+  color: var(--vynl-cyan);
+}
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.eq i {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  background: currentColor;
+  transform-origin: bottom;
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+.eq i:nth-child(2) {
+  animation-duration: 0.7s;
+  animation-delay: -0.3s;
+}
+.eq i:nth-child(3) {
+  animation-duration: 1.1s;
+  animation-delay: -0.6s;
+}
+@keyframes eq {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eq i {
+    animation: none;
+    transform: scaleY(0.7);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Découvrir : le hero (titre immense, disque géant qui déborde) et la caisse
+   de disques. Repris du site vitrine.
+   --------------------------------------------------------------------- */
+@keyframes word-in {
+  from {
+    transform: translateY(108%) rotate(5deg);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-drift {
+  to {
+    rotate: 32deg;
+    translate: 0 -5vh;
+  }
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-lg);
+  min-height: min(76vh, 740px);
+  padding: clamp(32px, 6vh, 72px) var(--space-lg) clamp(40px, 8vh, 96px);
+  overflow-x: clip;
+  isolation: isolate;
+  background:
+    radial-gradient(60% 60% at 78% 48%, rgba(0, 89, 249, 0.28), transparent),
+    radial-gradient(40% 30% at 6% 80%, rgba(61, 139, 255, 0.1), transparent);
+}
+/* Sillons en filigrane derrière le disque. */
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -22vw;
+  top: 50%;
+  width: min(90vw, 1100px);
+  aspect-ratio: 1;
+  translate: 0 -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: repeating-radial-gradient(circle closest-side, transparent 0 11px, rgba(144, 191, 233, 0.07) 11px 12px);
+  -webkit-mask-image: radial-gradient(circle closest-side, #000 25%, transparent 100%);
+  mask-image: radial-gradient(circle closest-side, #000 25%, transparent 100%);
+}
+.hero__eyebrow {
+  margin-bottom: var(--space-sm);
+  color: var(--vynl-cyan);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hero__title {
+  font-family: var(--vynl-police-marque);
+  font-size: clamp(2.6rem, 6.4vw, 5.6rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+.hero__title .line {
+  display: block;
+}
+/* Chaque mot monte derrière un masque : l'entrée est un révélateur, pas un fondu. */
+.w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.w > span {
+  display: inline-block;
+}
+.line--grad .w > span {
+  padding-bottom: 0.06em;
+  background: linear-gradient(180deg, var(--vynl-cyan) 0%, var(--vynl-bleu) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.hero__lead {
+  max-width: 34rem;
+  margin-top: var(--space-md);
+  color: var(--vynl-texte-2);
+  font-size: clamp(1.0625rem, 1.5vw, 1.1875rem);
+}
+.hero__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+.hero__latest {
+  margin-top: var(--space-md);
+  color: var(--vynl-texte-2);
+  font-size: 0.875rem;
+}
+.hero__disc {
+  justify-self: end;
+  width: min(100%, 640px);
+  margin-right: calc(var(--space-lg) * -1.2);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .w > span {
+    animation: word-in 1.1s var(--vynl-ease-out) both;
+    animation-delay: calc(var(--d, 0) * 90ms + 120ms);
+  }
+  .rise {
+    animation: rise 0.9s var(--vynl-ease-out) both;
+    animation-delay: calc(var(--i, 0) * 110ms + 450ms);
+  }
+}
+/* Le disque tourne un peu et monte quand on fait défiler la page (Chrome, Safari récents). */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__disc {
+      animation: hero-drift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 90vh;
+    }
+  }
+}
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: var(--space-md);
+  }
+  .hero__disc {
+    justify-self: center;
+    width: 112vw;
+    max-width: none;
+    margin: 0 -6vw;
+  }
+}
+
+.crate {
+  display: flex;
+  gap: clamp(24px, 4vw, 48px);
+  margin-inline: calc(var(--space-lg) * -1);
+  padding: 8px var(--space-lg) 48px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: var(--space-lg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--vynl-sillon) transparent;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+}
+.crate__item {
+  flex: 0 0 clamp(150px, 18vw, 230px);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+/* Un disque sur deux décalé vers le bas : la rangée ondule. */
+.crate__item:nth-child(even) {
+  padding-top: 28px;
+}
+.crate__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.crate__disc {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--vynl-abysse);
+  box-shadow: 0 30px 50px -18px rgba(0, 4, 40, 0.9), 0 0 0 1px var(--vynl-bordure);
+  transition: transform 0.5s var(--vynl-ease-out), box-shadow 0.5s var(--vynl-ease-out);
+}
+.crate__disc img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.crate__disc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: repeating-radial-gradient(circle closest-side, rgba(5, 8, 22, 0.35) 0 1px, transparent 1px 3px);
+}
+.crate__disc::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: 14%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--vynl-nuit);
+  box-shadow: 0 0 0 1px var(--vynl-sillon);
+}
+.crate__disc--blank {
+  background:
+    radial-gradient(circle closest-side, var(--vynl-bleu) 0 34%, transparent 34%),
+    repeating-radial-gradient(circle closest-side, #0b1130 0 1.4px, #101946 1.4px 3px);
+}
+@media (hover: hover) {
+  .crate__link:hover .crate__disc {
+    transform: scale(1.06) rotate(8deg);
+    box-shadow: 0 40px 70px -18px rgba(0, 60, 255, 0.55), 0 0 0 1px var(--vynl-azur);
+  }
+}
+.crate__title,
+.crate__artist,
+.crate__kind {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crate__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.crate__artist {
+  color: var(--vynl-texte-2);
+  font-size: 0.9375rem;
+}
+.crate__kind {
+  color: var(--vynl-texte-3);
+  font-size: 0.75rem;
 }

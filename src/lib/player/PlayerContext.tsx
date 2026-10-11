@@ -49,6 +49,15 @@ interface PlayerContextValue extends PlayerState {
   previous: () => void;
   hasNext: boolean;
   hasPrevious: boolean;
+  /** La file d'attente et la position du morceau en cours dedans (-1 si rien ne joue). */
+  queue: readonly PlayerTrack[];
+  queueIndex: number;
+  /** Joue le morceau à cette position de la file (ex. depuis la liste « Up next »). */
+  playAt: (index: number) => void;
+  /** Vue « Now playing » (la platine) ouverte par-dessus l'app. */
+  nowPlayingOpen: boolean;
+  openNowPlaying: () => void;
+  closeNowPlaying: () => void;
   /** Arrête la lecture et vide le lecteur (ex. à la déconnexion). */
   stop: () => void;
 }
@@ -151,16 +160,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // La ref sert aux décisions (callbacks stables), le state seulement à l'affichage
   // des boutons Précédent / Suivant.
   const queueRef = useRef<Queue<PlayerTrack>>(EMPTY_QUEUE);
-  const [queueNav, setQueueNav] = useState({ hasNext: false, hasPrevious: false });
+  const [queueView, setQueueView] = useState<Queue<PlayerTrack>>(EMPTY_QUEUE);
+  const [nowPlayingOpen, setNowPlayingOpen] = useState(false);
 
   const [state, setState] = useState<PlayerState>(initialState);
 
   const setQueue = useCallback((queue: Queue<PlayerTrack>) => {
     queueRef.current = queue;
-    const next = hasNext(queue);
-    const previous = hasPrevious(queue);
-    setQueueNav((prev) => (prev.hasNext === next && prev.hasPrevious === previous ? prev : { hasNext: next, hasPrevious: previous }));
+    setQueueView(queue);
   }, []);
+
+  const openNowPlaying = useCallback(() => setNowPlayingOpen(true), []);
+  const closeNowPlaying = useCallback(() => setNowPlayingOpen(false), []);
 
   const fail = useCallback((message: string) => {
     setState((s) => ({ ...s, isLoading: false, isBuffering: false, error: message }));
@@ -436,6 +447,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     endPlay("closed"); // avant de vider l'<audio> : on a besoin de sa position
     setQueue(EMPTY_QUEUE);
+    setNowPlayingOpen(false); // sinon la platine se rouvrirait à la prochaine lecture
     requestRef.current++; // invalide tout chargement en cours
     trackRef.current = null;
     loadedIdRef.current = null;
@@ -484,7 +496,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <PlayerContext.Provider
-      value={{ ...state, ...queueNav, play, toggle, seek, next, previous, stop }}
+      value={{
+        ...state,
+        hasNext: hasNext(queueView),
+        hasPrevious: hasPrevious(queueView),
+        queue: queueView.items,
+        queueIndex: queueView.index,
+        playAt,
+        nowPlayingOpen: nowPlayingOpen && state.track !== null,
+        openNowPlaying,
+        closeNowPlaying,
+        play,
+        toggle,
+        seek,
+        next,
+        previous,
+        stop,
+      }}
     >
       {children}
       <audio

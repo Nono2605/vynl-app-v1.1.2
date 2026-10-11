@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { Nav, NavFallback } from "@/components/Nav";
 import { PlayerProvider } from "@/lib/player/PlayerContext";
 import { PlayerBar } from "@/components/PlayerBar";
+import { NowPlaying } from "@/components/NowPlaying";
+import { Motion } from "@/components/Motion";
 import "./globals.css";
 
 // Dela Gothic One : logo et grands titres d'impact uniquement. Sora : tout le
@@ -33,6 +35,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${delaGothic.variable} ${sora.variable}`}>
       <body>
+        <noscript>
+          <style>{"[data-reveal]{opacity:1!important;translate:none!important}"}</style>
+        </noscript>
         <a href="#contenu" className="skip-link">
           Skip to content
         </a>
@@ -44,6 +49,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {children}
           </main>
           <PlayerBar />
+          <NowPlaying />
+          <Motion />
         </PlayerProvider>
       </body>
     </html>

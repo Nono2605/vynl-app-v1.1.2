@@ -7,7 +7,16 @@ import type { PlaySource } from "@/lib/player/types";
 // « Play » d'un album ou d'une playlist : lance la liste depuis le premier morceau,
 // la file d'attente enchaîne ensuite. Si un morceau de cette liste est déjà en
 // cours, le bouton devient Pause / Play sur ce morceau, sans repartir de zéro.
-export function PlayAllButton({ tracks, source }: { tracks: PlayerTrack[]; source?: PlaySource }) {
+export function PlayAllButton({
+  tracks,
+  source,
+  label = "Play",
+}: {
+  tracks: PlayerTrack[];
+  source?: PlaySource;
+  /** Texte du bouton à l'arrêt ; il passe à « Pause » quand un morceau de la liste joue. */
+  label?: string;
+}) {
   const { track: current, isPlaying, isLoading, play, toggle } = usePlayer();
   const inList = current !== null && tracks.some((t) => t.id === current.id);
   const showLoading = inList && isLoading;
@@ -27,7 +36,7 @@ export function PlayAllButton({ tracks, source }: { tracks: PlayerTrack[]; sourc
       className="btn btn-primary"
     >
       {showLoading ? <SpinnerIcon size={18} /> : showPause ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
-      {showPause ? "Pause" : "Play"}
+      {showPause ? "Pause" : label}
     </button>
   );
 }

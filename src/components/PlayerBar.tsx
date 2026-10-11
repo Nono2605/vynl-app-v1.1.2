@@ -1,13 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { usePlayer } from "@/lib/player/PlayerContext";
-import { formatDuration } from "@/lib/formatDuration";
 import { PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
-import { VinylCover } from "@/components/VinylCover";
+import { Record } from "@/components/Record";
+import { SeekControl } from "@/components/SeekControl";
 
 // La mise en page (grille desktop, deux lignes sur mobile) est dans
 // globals.css (.player-bar*) ; ici, seulement l'apparence des éléments.
+// Le morceau en cours est un mini-disque qui tourne (son anneau avance avec la
+// lecture) ; cliquer dessus ouvre la platine (NowPlaying).
 export function PlayerBar() {
   const {
     track,
@@ -19,38 +20,32 @@ export function PlayerBar() {
     error,
     hasNext,
     toggle,
-    seek,
     next,
     previous,
+    openNowPlaying,
   } = usePlayer();
-
-  // Pendant un glissement du curseur on affiche la valeur du doigt, pas
-  // currentTime (que timeupdate réécrit en continu et qui faisait sauter le
-  // curseur) ; on ne seek qu'au relâchement. Au clavier : seek immédiat.
-  const [dragTime, setDragTime] = useState<number | null>(null);
-  const draggingRef = useRef(false);
 
   if (!track) return null;
 
-  const shownTime = dragTime ?? currentTime;
-  const progress = duration ? Math.min(shownTime / duration, 1) * 100 : 0;
-
-  function commitDrag() {
-    draggingRef.current = false;
-    if (dragTime !== null) {
-      seek(dragTime);
-      setDragTime(null);
-    }
-  }
+  const progress = duration ? Math.min(currentTime / duration, 1) : 0;
 
   return (
     <div role="region" aria-label="Player" className="player-bar">
       <div className="player-bar__track">
-        <VinylCover src={track.coverUrl} size={48} small style={{ borderRadius: "var(--radius-sm)" }} />
-        <div style={{ minWidth: 0 }}>
-          <p style={titleStyle}>{track.title}</p>
-          <p style={artistStyle}>{track.artistName}</p>
-        </div>
+        <button
+          type="button"
+          onClick={openNowPlaying}
+          className="player-bar__open"
+          aria-label={`Open now playing: ${track.title}, ${track.artistName}`}
+        >
+          <span className="player-bar__disc">
+            <Record small cover={track.coverUrl} label={track.title} progress={progress} playing={isPlaying} turn={9} />
+          </span>
+          <span style={{ minWidth: 0 }}>
+            <span style={titleStyle}>{track.title}</span>
+            <span style={artistStyle}>{track.artistName}</span>
+          </span>
+        </button>
       </div>
 
       <div className="player-bar__controls">
@@ -87,31 +82,7 @@ export function PlayerBar() {
             <SkipNextIcon size={18} />
           </button>
         </div>
-        <div className="player-bar__seek">
-          <span style={{ ...timeStyle, textAlign: "right" }}>{formatDuration(Math.floor(shownTime))}</span>
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step="any"
-            value={Math.min(shownTime, duration || 0)}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              if (draggingRef.current) setDragTime(value);
-              else seek(value);
-            }}
-            onPointerDown={() => {
-              draggingRef.current = true;
-            }}
-            onPointerUp={commitDrag}
-            onPointerCancel={commitDrag}
-            onBlur={commitDrag}
-            className="seek-bar"
-            style={{ flex: 1, "--progress": `${progress}%` } as React.CSSProperties}
-            aria-label="Seek"
-          />
-          <span style={timeStyle}>{duration ? formatDuration(Math.floor(duration)) : "--:--"}</span>
-        </div>
+        <SeekControl className="player-bar__seek" />
       </div>
 
       {error && (
@@ -124,6 +95,7 @@ export function PlayerBar() {
 }
 
 const titleStyle: React.CSSProperties = {
+  display: "block",
   fontWeight: 600,
   fontSize: "0.875rem",
   whiteSpace: "nowrap",
@@ -132,6 +104,7 @@ const titleStyle: React.CSSProperties = {
 };
 
 const artistStyle: React.CSSProperties = {
+  display: "block",
   color: "var(--vynl-texte-2)",
   fontSize: "0.75rem",
   whiteSpace: "nowrap",
@@ -153,14 +126,4 @@ const playButtonStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-};
-
-// texte-2 et non texte-3 : le lecteur est un verre, pas le fond Nuit, où texte-3 manque de contraste.
-const timeStyle: React.CSSProperties = {
-  color: "var(--vynl-texte-2)",
-  fontSize: "0.75rem",
-  fontWeight: 500,
-  fontVariantNumeric: "tabular-nums",
-  width: 36,
-  flex: "none",
 };

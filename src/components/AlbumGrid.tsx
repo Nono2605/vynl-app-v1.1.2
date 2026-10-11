@@ -38,8 +38,10 @@ export function AlbumGrid({ albums, emptyMessage }: { albums: Album[] | null; em
       }}
     >
       {albums.map((album) => (
-        <Link key={album.id} href={`/albums/${album.id}`} className="hover-card">
-          <VinylCover src={album.cover_url} style={{ marginBottom: "0.65rem" }} />
+        <Link key={album.id} href={`/albums/${album.id}`} className="hover-card" data-reveal>
+          <span data-tilt style={{ display: "block", marginBottom: "0.65rem" }}>
+            <VinylCover src={album.cover_url} />
+          </span>
           <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{album.title}</p>
           {album.artists && (
             <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>{album.artists.name}</p>

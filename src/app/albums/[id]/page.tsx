@@ -7,6 +7,7 @@ import { formatDuration } from "@/lib/formatDuration";
 import { VinylCover } from "@/components/VinylCover";
 import { SaveButton } from "@/components/SaveButton";
 import { PlayAllButton } from "@/components/PlayAllButton";
+import { TrackIndex } from "@/components/TrackIndex";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 
 interface AlbumTrack {
@@ -133,9 +134,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                   borderBottom: "1px solid var(--vynl-bordure)",
                 }}
               >
-                <span style={{ color: "var(--vynl-texte-3)", fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>
-                  {track.track_number ?? index + 1}
-                </span>
+                <TrackIndex id={track.id} n={track.track_number ?? index + 1} />
                 <TrackPlayButton
                   track={queue[index]}
                   size={28}

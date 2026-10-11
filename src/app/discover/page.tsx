@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
-import { TrackGrid, type Track } from "@/components/TrackGrid";
-import { AlbumGrid } from "@/components/AlbumGrid";
+import type { Track } from "@/components/TrackGrid";
+import type { Artist } from "@/components/ArtistGrid";
+import { DiscoverView } from "@/components/DiscoverView";
 import { fetchAlbums } from "@/lib/albums";
-import { ArtistGrid, type Artist } from "@/components/ArtistGrid";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
 
 export default async function DiscoverPage() {
@@ -17,41 +17,12 @@ export default async function DiscoverPage() {
     redirect("/login");
   }
 
-  const [albumsRes, tracksRes, artistsRes, savedTrackIds] = await Promise.all([
+  const [albums, tracksRes, artistsRes, savedTrackIds] = await Promise.all([
     fetchAlbums("limit=12"),
     api.get<{ data: Track[] }>("/tracks?limit=12"),
     api.get<{ data: Artist[] }>("/artists?limit=12"),
     getSavedTrackIds(session.access_token),
   ]);
 
-  return (
-    <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
-      <section>
-        <h1 className="display-title" style={{ marginBottom: "var(--space-sm)" }}>Discover</h1>
-        <p style={{ color: "var(--vynl-texte-2)" }}>
-          Everything published on Vynl, most recent first.
-        </p>
-      </section>
-
-      <section>
-        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New releases</h2>
-        <AlbumGrid albums={albumsRes} emptyMessage="No releases published yet. Check back soon." />
-      </section>
-
-      <section>
-        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New tracks</h2>
-        <TrackGrid
-          tracks={tracksRes.data}
-          emptyMessage="No tracks published yet. Check back soon."
-          savedTrackIds={savedTrackIds}
-          source={{ context: "discover" }}
-        />
-      </section>
-
-      <section>
-        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Artists</h2>
-        <ArtistGrid artists={artistsRes.data} emptyMessage="No artists yet. Check back soon." />
-      </section>
-    </div>
-  );
+  return <DiscoverView albums={albums} tracks={tracksRes.data} artists={artistsRes.data} savedTrackIds={savedTrackIds} />;
 }
