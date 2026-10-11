@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
 import { formatDuration } from "@/lib/formatDuration";
+import { VinylCover } from "@/components/VinylCover";
 
 interface AlbumTrack {
   id: string;
@@ -46,15 +47,7 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
   return (
     <div style={{ padding: "var(--space-lg)", maxWidth: 720 }}>
       <div style={{ display: "flex", gap: "var(--space-lg)", marginBottom: "var(--space-xl)", flexWrap: "wrap" }}>
-        <div
-          style={{
-            width: 180,
-            height: 180,
-            flex: "none",
-            borderRadius: "var(--radius-md)",
-            background: album.cover_url ? `url(${album.cover_url}) center/cover` : "var(--vynl-pochette-vide)",
-          }}
-        />
+        <VinylCover src={album.cover_url} size={180} label={`Cover of ${album.title}`} />
         <div style={{ alignSelf: "flex-end" }}>
           <p
             style={{

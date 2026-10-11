@@ -1,6 +1,7 @@
 import { SaveButton } from "@/components/SaveButton";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
 import type { PlaySource } from "@/lib/player/types";
+import { VinylCover } from "@/components/VinylCover";
 
 export interface Track {
   id: string;
@@ -37,18 +38,8 @@ export function TrackGrid({
     >
       {tracks.map((track) => (
         <article key={track.id} className="hover-card">
-          <div
-            style={{
-              position: "relative",
-              width: "100%",
-              aspectRatio: "1",
-              borderRadius: "var(--radius-md)",
-              marginBottom: "0.65rem",
-              background: track.albums?.cover_url
-                ? `url(${track.albums.cover_url}) center/cover`
-                : "var(--vynl-pochette-vide)",
-            }}
-          >
+          <div style={{ position: "relative", width: "100%", marginBottom: "0.65rem" }}>
+            <VinylCover src={track.albums?.cover_url ?? null} />
             <div
               style={{
                 position: "absolute",

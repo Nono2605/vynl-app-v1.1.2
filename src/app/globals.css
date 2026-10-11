@@ -670,3 +670,80 @@ textarea {
   background: #fff;
   box-shadow: var(--vynl-lueur-cyan);
 }
+
+/* Pochette en disque picture : l'image du créateur imprimée sur un vinyle (sillons, étiquette,
+   reflet). Même rendu que l'app d'écoute. Le carré prend la taille de son conteneur. Sans image,
+   .vinyl-cover--empty reprend le vinyle vide (--vynl-pochette-vide). */
+.vinyl-cover {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--vynl-vinyle), var(--vynl-abysse));
+}
+.vinyl-cover--empty {
+  background: var(--vynl-pochette-vide);
+}
+.vinyl-cover__img {
+  position: absolute;
+  inset: 5%;
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--vynl-nuit);
+  box-shadow: 0 0 0 1px rgba(144, 191, 233, 0.2), 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+/* Sillons fins + bord assombri, puis reflet en éventail : seulement sur le disque. */
+.vinyl-cover:not(.vinyl-cover--empty)::before,
+.vinyl-cover:not(.vinyl-cover--empty)::after {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.vinyl-cover:not(.vinyl-cover--empty)::before {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 62%, rgba(5, 8, 22, 0.38) 100%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 2px, rgba(5, 8, 22, 0.22) 2px 3px);
+}
+.vinyl-cover:not(.vinyl-cover--empty)::after {
+  background: conic-gradient(
+    from 25deg,
+    transparent 0 14%,
+    rgba(255, 255, 255, 0.2) 22%,
+    transparent 30% 64%,
+    rgba(255, 255, 255, 0.14) 72%,
+    transparent 80%
+  );
+  mix-blend-mode: screen;
+}
+/* Étiquette centrale bleue et trou de la broche. Absente du vinyle vide : son dégradé la dessine déjà. */
+.vinyl-cover__label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 17%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--vynl-nuit) 0 11%, var(--vynl-bleu) 12% 100%);
+  border: 2px solid rgba(5, 8, 22, 0.85);
+  z-index: 1;
+}
+.vinyl-cover--empty .vinyl-cover__label {
+  display: none;
+}
+/* Petites tailles (vignettes, lecteur) : sans sillons, ils ne feraient que du bruit. */
+.vinyl-cover--sm:not(.vinyl-cover--empty)::before {
+  background: radial-gradient(circle at 50% 50%, transparent 62%, rgba(5, 8, 22, 0.38) 100%);
+}
+.vinyl-cover--sm .vinyl-cover__label {
+  width: 22%;
+  border-width: 1px;
+}

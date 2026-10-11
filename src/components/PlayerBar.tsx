@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { usePlayer } from "@/lib/player/PlayerContext";
 import { formatDuration } from "@/lib/formatDuration";
 import { PlayIcon, PauseIcon, SpinnerIcon } from "@/components/icons";
+import { VinylCover } from "@/components/VinylCover";
 
 // La mise en page (grille desktop, deux lignes sur mobile) est dans
 // globals.css (.player-bar*) ; ici, seulement l'apparence des éléments.
@@ -32,15 +33,7 @@ export function PlayerBar() {
   return (
     <div role="region" aria-label="Player" className="player-bar">
       <div className="player-bar__track">
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: "var(--radius-sm)",
-            flex: "none",
-            background: track.coverUrl ? `url(${track.coverUrl}) center/cover` : "var(--vynl-pochette-vide)",
-          }}
-        />
+        <VinylCover src={track.coverUrl} size={48} small style={{ borderRadius: "var(--radius-sm)" }} />
         <div style={{ minWidth: 0 }}>
           <p style={titleStyle}>{track.title}</p>
           <p style={artistStyle}>{track.artistName}</p>

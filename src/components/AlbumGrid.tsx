@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VinylCover } from "@/components/VinylCover";
 
 export interface Album {
   id: string;
@@ -22,15 +23,7 @@ export function AlbumGrid({ albums, emptyMessage }: { albums: Album[]; emptyMess
     >
       {albums.map((album) => (
         <Link key={album.id} href={`/albums/${album.id}`} className="hover-card">
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "1",
-              borderRadius: "var(--radius-md)",
-              marginBottom: "0.65rem",
-              background: album.cover_url ? `url(${album.cover_url}) center/cover` : "var(--vynl-pochette-vide)",
-            }}
-          />
+          <VinylCover src={album.cover_url} style={{ marginBottom: "0.65rem" }} />
           <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{album.title}</p>
           {album.artists && (
             <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>{album.artists.name}</p>
