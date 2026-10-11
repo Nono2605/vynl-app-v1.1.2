@@ -4,6 +4,9 @@ import { usePlayer } from "@/lib/player/PlayerContext";
 import { PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
 import { Record } from "@/components/Record";
 import { SeekControl } from "@/components/SeekControl";
+import { ShuffleButton } from "@/components/ShuffleButton";
+import { QueueButton } from "@/components/QueueButton";
+import { VolumeControl } from "@/components/VolumeControl";
 
 // La mise en page (grille desktop, deux lignes sur mobile) est dans
 // globals.css (.player-bar*) ; ici, seulement l'apparence des éléments.
@@ -50,6 +53,7 @@ export function PlayerBar() {
 
       <div className="player-bar__controls">
         <div className="player-bar__buttons">
+          <ShuffleButton className="player-bar__shuffle" />
           <button
             onClick={previous}
             disabled={isLoading}
@@ -81,8 +85,15 @@ export function PlayerBar() {
           >
             <SkipNextIcon size={18} />
           </button>
+          {/* Équilibre le bouton aléatoire : le bouton Lecture reste au centre de la barre. */}
+          <span className="player-bar__spacer" aria-hidden="true" />
         </div>
         <SeekControl className="player-bar__seek" />
+      </div>
+
+      <div className="player-bar__extras">
+        <QueueButton />
+        <VolumeControl />
       </div>
 
       {error && (

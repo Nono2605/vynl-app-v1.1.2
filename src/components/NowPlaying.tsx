@@ -5,7 +5,9 @@ import { usePlayer } from "@/lib/player/PlayerContext";
 import { Icon, PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
 import { Record } from "@/components/Record";
 import { SeekControl } from "@/components/SeekControl";
-import { VinylCover } from "@/components/VinylCover";
+import { ShuffleButton } from "@/components/ShuffleButton";
+import { UpcomingList } from "@/components/UpcomingList";
+import { VolumeControl } from "@/components/VolumeControl";
 
 const MAX_UPCOMING = 8;
 const FOCUSABLE = 'button:not(:disabled), [href], input:not(:disabled), [tabindex]:not([tabindex="-1"])';
@@ -29,9 +31,10 @@ export function NowPlaying() {
     toggle,
     next,
     previous,
-    queue,
-    queueIndex,
-    playAt,
+    upcoming,
+    jumpTo,
+    removeUpcoming,
+    clearUpcoming,
   } = usePlayer();
 
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -58,8 +61,6 @@ export function NowPlaying() {
   if (!nowPlayingOpen || !track) return null;
 
   const progress = duration ? Math.min(currentTime / duration, 1) : 0;
-  const upcoming = queue.slice(queueIndex + 1, queueIndex + 1 + MAX_UPCOMING);
-  const hiddenCount = Math.max(0, queue.length - (queueIndex + 1) - upcoming.length);
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Escape") {
@@ -137,6 +138,7 @@ export function NowPlaying() {
         <SeekControl className="np__seek" />
 
         <div className="np__controls">
+          <ShuffleButton className="skip-btn--lg" />
           <button onClick={previous} disabled={isLoading} aria-label="Previous track" className="icon-btn skip-btn skip-btn--lg">
             <SkipPreviousIcon size={24} />
           </button>
@@ -156,7 +158,9 @@ export function NowPlaying() {
           >
             <SkipNextIcon size={24} />
           </button>
+          <span className="np__spacer" aria-hidden="true" />
         </div>
+        <VolumeControl className="np__volume" />
 
         {error && (
           <p role="alert" className="np__error">
@@ -166,21 +170,19 @@ export function NowPlaying() {
 
         {upcoming.length > 0 && (
           <section className="np__queue" aria-label="Up next">
-            <h3 className="np__queue-title">Up next</h3>
-            <ol>
-              {upcoming.map((item, i) => (
-                <li key={`${item.id}-${queueIndex + 1 + i}`}>
-                  <button type="button" className="np__queue-row" onClick={() => playAt(queueIndex + 1 + i)} disabled={isLoading}>
-                    <VinylCover src={item.coverUrl} size={40} small />
-                    <span className="np__queue-text">
-                      <span className="np__queue-name">{item.title}</span>
-                      <span className="np__queue-artist">{item.artistName}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ol>
-            {hiddenCount > 0 && <p className="np__more">and {hiddenCount} more</p>}
+            <div className="np__queue-head">
+              <h3 className="np__queue-title">Up next</h3>
+              <button type="button" className="btn-plain np__queue-clear" onClick={clearUpcoming}>
+                Clear
+              </button>
+            </div>
+            <UpcomingList
+              items={upcoming}
+              onJump={jumpTo}
+              onRemove={removeUpcoming}
+              limit={MAX_UPCOMING}
+              disabled={isLoading}
+            />
           </section>
         )}
       </div>

@@ -8,6 +8,8 @@ import { VinylCover } from "@/components/VinylCover";
 import { SaveButton } from "@/components/SaveButton";
 import { PlayAllButton } from "@/components/PlayAllButton";
 import { TrackIndex } from "@/components/TrackIndex";
+import { TrackActions } from "@/components/TrackActions";
+import { getSavedTrackIds } from "@/lib/savedTrackIds";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 
 interface AlbumTrack {
@@ -48,10 +50,13 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
 
   // Une erreur ici (API injoignable) ne doit pas empêcher d'afficher l'album : le
   // cœur repart simplement « non sauvegardé ».
-  const saved = await api
-    .get<{ saved: boolean }>(`/library/album/${id}`, { accessToken: session.access_token })
-    .then((r) => r.saved)
-    .catch(() => false);
+  const [saved, savedTrackIds] = await Promise.all([
+    api
+      .get<{ saved: boolean }>(`/library/album/${id}`, { accessToken: session.access_token })
+      .then((r) => r.saved)
+      .catch(() => false),
+    getSavedTrackIds(session.access_token).catch(() => new Set<string>()),
+  ]);
 
   const releaseYear = album.release_date ? new Date(album.release_date).getUTCFullYear() : null;
   const releaseDate = album.release_date
@@ -145,6 +150,11 @@ export default async function AlbumPage({ params }: { params: Promise<{ id: stri
                 <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                   {formatDuration(track.duration_seconds)}
                 </span>
+                <TrackActions
+                  track={queue[index]}
+                  source={{ context: "album", id: album.id }}
+                  saved={savedTrackIds.has(track.id)}
+                />
               </li>
             ))}
           </ol>

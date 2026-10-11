@@ -1,5 +1,6 @@
 import { SaveButton } from "@/components/SaveButton";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
+import { TrackMenu } from "@/components/TrackMenu";
 import type { PlaySource } from "@/lib/player/types";
 import { VinylCover } from "@/components/VinylCover";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
@@ -66,24 +67,12 @@ export function TrackGrid({
                 queue={queue}
               />
             </div>
-            {savedTrackIds && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "0.5rem",
-                  right: "0.5rem",
-                  background: "var(--vynl-voile)",
-                  borderRadius: "50%",
-                  width: 28,
-                  height: 28,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+            <div className="card-actions">
+              {savedTrackIds && (
                 <SaveButton itemType="track" itemId={track.id} initialSaved={savedTrackIds.has(track.id)} />
-              </div>
-            )}
+              )}
+              <TrackMenu track={queue[index]} source={source} />
+            </div>
           </div>
           <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{track.title}</p>
           <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>

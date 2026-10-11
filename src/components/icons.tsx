@@ -86,6 +86,68 @@ export function HeartIcon({ size = 20, filled = false }: IconProps & { filled?: 
   );
 }
 
+export function ShuffleIcon({ size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">
+      <path d="M3 7h3.2c1.5 0 2.8.7 3.7 1.9l4.2 6.2c.9 1.2 2.2 1.9 3.7 1.9H21" />
+      <path d="m18 14 3 3-3 3" />
+      <path d="M3 17h3.2c1.5 0 2.8-.7 3.7-1.9" />
+      <path d="M14.1 8.9C15 7.7 16.3 7 17.8 7H21" />
+      <path d="m18 4 3 3-3 3" />
+    </svg>
+  );
+}
+
+/** La file d'attente : une liste avec une flèche de lecture. */
+export function QueueIcon({ size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">
+      <path d="M4 6h11" />
+      <path d="M4 12h7" />
+      <path d="M4 18h7" />
+      <path d="M15 13.2v6.6a.6.6 0 0 0 .9.5l5.3-3.3a.6.6 0 0 0 0-1l-5.3-3.3a.6.6 0 0 0-.9.5Z" />
+    </svg>
+  );
+}
+
+/** Trois points horizontaux : le menu d'options d'un morceau. */
+export function MoreIcon({ size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+      <circle cx="5.5" cy="12" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="18.5" cy="12" r="1.8" />
+    </svg>
+  );
+}
+
+export function SpeakerIcon({ size = 20, level }: IconProps & { level: "mute" | "low" | "high" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">
+      <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4Z" />
+      {level === "mute" && <path d="m16 9.5 5 5m0-5-5 5" />}
+      {level !== "mute" && <path d="M15.6 9.2a4 4 0 0 1 0 5.6" />}
+      {level === "high" && <path d="M18.4 6.6a8 8 0 0 1 0 10.8" />}
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+export function ChevronLeftIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">
+      <path d="m14 6-6 6 6 6" />
+    </svg>
+  );
+}
+
 export function SearchIcon({ size = 18 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">

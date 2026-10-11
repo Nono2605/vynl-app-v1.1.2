@@ -6,6 +6,7 @@ import { PlayerProvider } from "@/lib/player/PlayerContext";
 import { PlayerBar } from "@/components/PlayerBar";
 import { NowPlaying } from "@/components/NowPlaying";
 import { Motion } from "@/components/Motion";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 // Dela Gothic One : logo et grands titres d'impact uniquement. Sora : tout le
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#contenu" className="skip-link">
           Skip to content
         </a>
+        <ToastProvider>
         <PlayerProvider>
           <Suspense fallback={<NavFallback />}>
             <Nav />
@@ -52,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <NowPlaying />
           <Motion />
         </PlayerProvider>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -1,24 +1,40 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { sendHeartbeat, startPlay } from "@/app/actions/player";
 import type { HeartbeatState, PlayFailure, PlaySource, StartPlayResult } from "@/lib/player/types";
 import {
-  EMPTY_QUEUE,
+  advance,
+  clearUpcoming,
+  emptyQueue,
+  enqueue as enqueueInQueue,
   hasNext,
   hasPrevious,
-  moveTo,
-  nextIndex,
+  jump,
   previousAction,
+  removeUpcoming,
+  retreat,
+  setShuffled,
   startQueue,
+  upcoming as upcomingOf,
   type Queue,
 } from "@/lib/player/queue";
+import {
+  readMuted,
+  readShuffle,
+  readVolume,
+  writeMuted,
+  writeShuffle,
+  writeVolume,
+} from "@/lib/player/preferences";
 
 export interface PlayerTrack {
   id: string;
   title: string;
   artistName: string;
   coverUrl: string | null;
+  /** D'où vient ce morceau quand il a été ajouté à la main à la file (sinon celle de la lecture en cours). */
+  source?: PlaySource;
 }
 
 interface PlayerState {
@@ -49,11 +65,27 @@ interface PlayerContextValue extends PlayerState {
   previous: () => void;
   hasNext: boolean;
   hasPrevious: boolean;
-  /** La file d'attente et la position du morceau en cours dedans (-1 si rien ne joue). */
-  queue: readonly PlayerTrack[];
-  queueIndex: number;
-  /** Joue le morceau à cette position de la file (ex. depuis la liste « Up next »). */
-  playAt: (index: number) => void;
+  /** La suite, dans l'ordre où elle sera jouée (ajouts manuels d'abord, puis la liste d'origine). */
+  upcoming: readonly PlayerTrack[];
+  /** Saute au k-ième morceau de la suite (ex. depuis la liste « Next up »). */
+  jumpTo: (k: number) => void;
+  /** Retire le k-ième morceau de la suite. */
+  removeUpcoming: (k: number) => void;
+  /** Vide la suite : le morceau en cours est le dernier. */
+  clearUpcoming: () => void;
+  /**
+   * Ajoute un morceau à la file : « next » le joue juste après le morceau en cours, « last »
+   * après les ajouts précédents. Si rien ne joue, il démarre.
+   */
+  enqueue: (track: PlayerTrack, mode: "next" | "last", source?: PlaySource) => void;
+  /** Aléatoire : la suite de la liste est jouée dans le désordre. */
+  shuffle: boolean;
+  toggleShuffle: () => void;
+  /** Volume de 0 à 1, et coupure du son (le volume réglé est gardé). */
+  volume: number;
+  muted: boolean;
+  setVolume: (volume: number) => void;
+  toggleMute: () => void;
   /** Vue « Now playing » (la platine) ouverte par-dessus l'app. */
   nowPlayingOpen: boolean;
   openNowPlaying: () => void;
@@ -155,13 +187,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   /** Dernier état envoyé : évite de répéter « playing » à chaque fin de mise en mémoire tampon. */
   const beatStateRef = useRef<"playing" | "paused" | null>(null);
   const sourceRef = useRef<PlaySource | undefined>(undefined);
+  /** Source de la liste d'où vient la lecture (album, playlist…), pour les morceaux de la file. */
+  const contextSourceRef = useRef<PlaySource | undefined>(undefined);
 
   // File d'attente : la liste d'où vient la lecture et la position dans cette liste.
   // La ref sert aux décisions (callbacks stables), le state seulement à l'affichage
   // des boutons Précédent / Suivant.
-  const queueRef = useRef<Queue<PlayerTrack>>(EMPTY_QUEUE);
-  const [queueView, setQueueView] = useState<Queue<PlayerTrack>>(EMPTY_QUEUE);
+  // Réglages gardés d'une visite à l'autre. Rien ne s'affiche avant qu'un morceau soit
+  // chargé (le lecteur est null au rendu serveur) : les lire ici ne désaccorde pas l'hydratation.
+  const [initialQueue] = useState(() => emptyQueue<PlayerTrack>(readShuffle()));
+  const queueRef = useRef<Queue<PlayerTrack>>(initialQueue);
+  const [queueView, setQueueView] = useState<Queue<PlayerTrack>>(initialQueue);
   const [nowPlayingOpen, setNowPlayingOpen] = useState(false);
+  const [volume, setVolumeState] = useState(readVolume);
+  const [muted, setMuted] = useState(readMuted);
 
   const [state, setState] = useState<PlayerState>(initialState);
 
@@ -169,6 +208,38 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     queueRef.current = queue;
     setQueueView(queue);
   }, []);
+
+  // Le volume et le muet s'appliquent à l'<audio> (ignorés par iOS, qui garde le volume système).
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = Math.min(1, Math.max(0, volume));
+    audio.muted = muted;
+  }, [volume, muted]);
+
+  const setVolume = useCallback((next: number) => {
+    const value = Math.min(1, Math.max(0, Number.isFinite(next) ? next : 1));
+    setVolumeState(value);
+    writeVolume(value);
+    // Monter le curseur depuis le muet rend le son, comme partout.
+    if (value > 0) {
+      setMuted(false);
+      writeMuted(false);
+    }
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setMuted((current) => {
+      writeMuted(!current);
+      return !current;
+    });
+  }, []);
+
+  const toggleShuffle = useCallback(() => {
+    const next = !queueRef.current.shuffled;
+    writeShuffle(next);
+    setQueue(setShuffled(queueRef.current, next));
+  }, [setQueue]);
 
   const openNowPlaying = useCallback(() => setNowPlayingOpen(true), []);
   const closeNowPlaying = useCallback(() => setNowPlayingOpen(false), []);
@@ -352,15 +423,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     [endPlay, fail]
   );
 
-  // Joue le morceau à cette position de la file. Pas de clé `source` : la file
-  // garde la source de la lecture d'origine (l'album, la playlist…).
-  const playAt = useCallback(
-    (index: number) => {
-      const queue = queueRef.current;
-      const track = queue.items[index];
+  // Joue le morceau courant d'une file qu'on vient de faire avancer (suivant, précédent,
+  // saut, enchaînement). Source : celle du morceau s'il a été ajouté à la main, sinon la
+  // lecture d'origine (l'album, la playlist…) ; toujours posée, pour qu'un ajout manuel
+  // ne laisse pas sa source au morceau d'après.
+  const startFromQueue = useCallback(
+    (queue: Queue<PlayerTrack>) => {
+      const track = queue.current;
       if (!track) return;
-      setQueue(moveTo(queue, index));
-      void load(track);
+      setQueue(queue);
+      void load(track, { source: track.source ?? contextSourceRef.current });
     },
     [load, setQueue]
   );
@@ -380,7 +452,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const audio = audioRef.current;
       if (!audio) return;
       if (fetchingIdRef.current === track.id) return; // déjà en cours de chargement
-      setQueue(startQueue(track, queue));
+      setQueue(startQueue(queueRef.current, track, queue));
+      contextSourceRef.current = source;
       // Même morceau, source valide ET lecture encore ouverte : on reprend. Sinon
       // (échec, ou morceau terminé : réécouter = nouvelle lecture) on recharge.
       if (loadedIdRef.current === track.id && playIdRef.current !== null) {
@@ -424,16 +497,17 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     // Pendant un chargement on ignore : chaque démarrage ouvre une lecture côté
     // serveur, en enchaîner trois d'affilée en laisserait deux vides.
     if (fetchingIdRef.current) return;
-    const upcoming = nextIndex(queueRef.current);
-    if (upcoming !== null) playAt(upcoming);
-  }, [playAt]);
+    const queue = advance(queueRef.current);
+    if (queue) startFromQueue(queue);
+  }, [startFromQueue]);
 
   const previous = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || fetchingIdRef.current) return;
     const action = previousAction(queueRef.current, audio.currentTime);
-    if (action.kind === "goto") {
-      playAt(action.index);
+    if (action.kind === "back") {
+      const queue = retreat(queueRef.current);
+      if (queue) startFromQueue(queue);
       return;
     }
     const track = trackRef.current;
@@ -441,12 +515,36 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     // Lecture déjà close (morceau fini ou en panne) : on le relance, sinon on revient au début.
     if (playIdRef.current === null) void load(track);
     else seek(0);
-  }, [playAt, load, seek]);
+  }, [startFromQueue, load, seek]);
+
+  const jumpTo = useCallback(
+    (k: number) => {
+      if (fetchingIdRef.current) return;
+      const queue = jump(queueRef.current, k);
+      if (queue) startFromQueue(queue);
+    },
+    [startFromQueue]
+  );
+
+  const removeFromUpcoming = useCallback((k: number) => setQueue(removeUpcoming(queueRef.current, k)), [setQueue]);
+  const clearAllUpcoming = useCallback(() => setQueue(clearUpcoming(queueRef.current)), [setQueue]);
+
+  const enqueue = useCallback(
+    (track: PlayerTrack, mode: "next" | "last", source?: PlaySource) => {
+      // Rien ne joue : « ajouter à la file » démarre le morceau, il n'y a pas de file à rejoindre.
+      if (!queueRef.current.current) {
+        play(track, source);
+        return;
+      }
+      setQueue(enqueueInQueue(queueRef.current, source ? { ...track, source } : track, mode));
+    },
+    [play, setQueue]
+  );
 
   const stop = useCallback(() => {
     const audio = audioRef.current;
     endPlay("closed"); // avant de vider l'<audio> : on a besoin de sa position
-    setQueue(EMPTY_QUEUE);
+    setQueue(emptyQueue<PlayerTrack>(queueRef.current.shuffled));
     setNowPlayingOpen(false); // sinon la platine se rouvrirait à la prochaine lecture
     requestRef.current++; // invalide tout chargement en cours
     trackRef.current = null;
@@ -494,15 +592,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     [endPlay, load]
   );
 
+  const upcoming = useMemo(() => upcomingOf(queueView), [queueView]);
+
   return (
     <PlayerContext.Provider
       value={{
         ...state,
         hasNext: hasNext(queueView),
         hasPrevious: hasPrevious(queueView),
-        queue: queueView.items,
-        queueIndex: queueView.index,
-        playAt,
+        upcoming,
+        jumpTo,
+        removeUpcoming: removeFromUpcoming,
+        clearUpcoming: clearAllUpcoming,
+        enqueue,
+        shuffle: queueView.shuffled,
+        toggleShuffle,
+        volume,
+        muted,
+        setVolume,
+        toggleMute,
         nowPlayingOpen: nowPlayingOpen && state.track !== null,
         openNowPlaying,
         closeNowPlaying,
@@ -564,8 +672,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           // Morceau terminé : la lecture se clôt. Réécouter ouvrira une nouvelle lecture.
           endPlay("ended", e.currentTarget.currentTime);
           // Enchaînement : le morceau suivant de la file démarre tout seul.
-          const upcoming = nextIndex(queueRef.current);
-          if (upcoming !== null) playAt(upcoming);
+          const queue = advance(queueRef.current);
+          if (queue) startFromQueue(queue);
         }}
         onError={(e) => handleError(e.currentTarget)}
       />

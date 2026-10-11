@@ -6,6 +6,8 @@ import { removeTrackFromPlaylist, deletePlaylist } from "@/app/actions/playlists
 import { TrackPlayButton } from "@/components/TrackPlayButton";
 import { PlayAllButton } from "@/components/PlayAllButton";
 import { TrackIndex } from "@/components/TrackIndex";
+import { TrackActions } from "@/components/TrackActions";
+import { getSavedTrackIds } from "@/lib/savedTrackIds";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { PlaylistVisibilityToggle } from "@/components/PlaylistVisibilityToggle";
 import { AddTrackSearch } from "./AddTrackSearch";
@@ -46,6 +48,9 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
   } catch {
     notFound();
   }
+
+  // Le cœur de chaque titre : un échec ici ne doit pas empêcher d'afficher la playlist.
+  const savedTrackIds = await getSavedTrackIds(session.access_token).catch(() => new Set<string>());
 
   const queue: PlayerTrack[] = playlist.tracks.map((t) => ({
     id: t.id,
@@ -119,6 +124,11 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                 <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                   {formatDuration(track.duration_seconds)}
                 </span>
+                <TrackActions
+                  track={queue[index]}
+                  source={{ context: "playlist", id: playlist.id }}
+                  saved={savedTrackIds.has(track.id)}
+                />
                 {playlist.is_owner && (
                   <form action={removeTrackFromPlaylist.bind(null, playlist.id, track.id)}>
                     <button

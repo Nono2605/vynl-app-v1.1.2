@@ -675,9 +675,17 @@ textarea {
   gap: 0.75rem;
   width: 100%;
 }
+/* L'erreur flotte au-dessus de la barre : elle ne doit pas la faire grandir (la marge
+   réservée en bas de page est fixe) ni se disputer la colonne de droite avec la file et le volume. */
 .player-bar__status {
-  text-align: right;
-  min-width: 0;
+  position: absolute;
+  right: var(--space-lg);
+  bottom: calc(100% + 0.5rem);
+  max-width: min(520px, calc(100vw - 2 * var(--space-md)));
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(255, 77, 109, 0.4);
+  border-radius: var(--vynl-rayon-champ);
+  background: var(--vynl-abysse);
 }
 
 @media (max-width: 640px) {
@@ -698,6 +706,11 @@ textarea {
   .player-bar__buttons {
     grid-area: play;
     gap: 0.25rem;
+  }
+  .player-bar__extras,
+  .player-bar__shuffle,
+  .player-bar__spacer {
+    display: none;
   }
   .player-bar__seek {
     grid-area: seek;
@@ -1133,8 +1146,26 @@ textarea {
 .np__queue {
   margin-top: var(--space-lg);
 }
+.np__queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+.np__queue-clear {
+  color: var(--vynl-azur-clair);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.np__spacer {
+  width: 52px;
+  height: 52px;
+  flex: none;
+}
+.np__volume {
+  margin-top: var(--space-md);
+}
 .np__queue-title {
-  margin-bottom: 0.5rem;
   color: var(--vynl-texte-2);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -1143,48 +1174,6 @@ textarea {
 }
 .np__queue ol {
   list-style: none;
-}
-.np__queue-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.5rem;
-  border: none;
-  border-radius: var(--vynl-rayon-carte);
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--transition-base);
-}
-.np__queue-row:hover:not(:disabled) {
-  background: var(--vynl-vinyle);
-}
-.np__queue-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.np__queue-name,
-.np__queue-artist {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.np__queue-name {
-  font-weight: 600;
-  font-size: 0.9375rem;
-}
-.np__queue-artist {
-  color: var(--vynl-texte-2);
-  font-size: 0.8125rem;
-}
-.np__more {
-  margin: 0.25rem 0 0 0.5rem;
-  color: var(--vynl-texte-2);
-  font-size: 0.8125rem;
 }
 
 @media (max-width: 860px) {
@@ -1802,4 +1791,404 @@ textarea {
       opacity: 0;
     }
   }
+}
+
+/* ---------------------------------------------------------------------
+   Aléatoire, volume, file d'attente : boutons du lecteur et fenêtre « Next up ».
+   --------------------------------------------------------------------- */
+.player-bar__extras {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+}
+/* Barre compacte (mobile) : seulement précédent, lecture, suivant ; la file, l'aléatoire et le
+   volume sont dans la platine. Placé après la règle de base pour l'emporter sur elle. */
+@media (max-width: 640px) {
+  .player-bar__extras {
+    display: none;
+  }
+}
+.player-bar__spacer {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+.toggle-btn {
+  position: relative;
+}
+.toggle-btn[aria-pressed="true"] {
+  color: var(--vynl-cyan);
+}
+/* Un point sous l'icône : l'état actif ne repose pas que sur la couleur. */
+.toggle-btn[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.volume__slider {
+  width: 96px;
+  flex: none;
+}
+/* Sur un appareil tactile le volume est celui de l'appareil (et iOS ignore celui de la page). */
+@media (hover: none), (pointer: coarse) {
+  .volume {
+    display: none;
+  }
+}
+
+.queue-wrap {
+  position: relative;
+}
+.queue-btn {
+  position: relative;
+}
+.queue-btn__count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--vynl-bleu);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+}
+.queue-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 24px);
+  z-index: var(--z-menu);
+  width: min(380px, calc(100vw - 2 * var(--space-md)));
+  max-height: min(60vh, 480px);
+  padding: 0.75rem;
+  overflow-y: auto;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: var(--vynl-rayon-panneau);
+  background: var(--vynl-abysse);
+  box-shadow: var(--vynl-lisere), var(--vynl-ombre);
+}
+.queue-pop__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  padding-inline: 0.25rem;
+}
+.queue-pop__title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.queue-pop__clear {
+  color: var(--vynl-azur-clair);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.queue-pop__now {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: var(--vynl-rayon-carte);
+  background: var(--vynl-vinyle);
+}
+.queue-pop__label {
+  color: var(--vynl-cyan);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.queue-pop__empty {
+  padding: 1rem 0.5rem 0.5rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.875rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .queue-pop {
+    animation: queue-pop-in 0.2s var(--vynl-ease-out) both;
+  }
+}
+@keyframes queue-pop-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+.upcoming {
+  margin-top: 0.5rem;
+  list-style: none;
+}
+.upcoming__item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--vynl-rayon-carte);
+  transition: background-color 0.15s ease;
+}
+.upcoming__item:hover {
+  background: var(--vynl-vinyle);
+}
+.upcoming__main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: var(--vynl-rayon-carte);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.upcoming__main:disabled {
+  cursor: default;
+}
+.upcoming__thumb {
+  display: block;
+  width: 40px;
+  flex: none;
+}
+.upcoming__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.upcoming__name,
+.upcoming__artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upcoming__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.upcoming__artist {
+  color: var(--vynl-texte-2);
+  font-size: 0.8125rem;
+}
+.upcoming__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--vynl-texte-2);
+  cursor: pointer;
+  opacity: 0;
+}
+.upcoming__item:hover .upcoming__remove,
+.upcoming__remove:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .upcoming__remove {
+    opacity: 1;
+  }
+}
+.upcoming__more {
+  padding: 0.25rem 0.5rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.8125rem;
+}
+
+/* ---------------------------------------------------------------------
+   Menu « ⋯ » d'un morceau, cœur à côté, messages de confirmation.
+   --------------------------------------------------------------------- */
+.track-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: none;
+}
+.track-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--vynl-texte-2);
+  cursor: pointer;
+  transition: color var(--transition-base), background-color var(--transition-base);
+}
+.track-menu-btn:hover,
+.track-menu-btn[aria-expanded="true"] {
+  background: var(--vynl-vinyle);
+  color: var(--vynl-texte);
+}
+/* Sur la pochette d'une carte : cœur et menu dans une pastille. */
+.card-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 0.25rem 0 0.5rem;
+  border-radius: 999px;
+  background: var(--vynl-voile);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.card-actions .track-menu-btn {
+  width: 28px;
+  height: 28px;
+}
+
+.track-menu {
+  position: fixed;
+  z-index: var(--z-menu);
+  max-height: min(60vh, 380px);
+  padding: 0.35rem;
+  overflow-y: auto;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: var(--vynl-rayon-carte);
+  background: var(--vynl-abysse);
+  box-shadow: var(--vynl-lisere), var(--vynl-ombre);
+}
+.track-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: var(--vynl-texte);
+  font: inherit;
+  font-size: 0.9375rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.track-menu__item:hover:not(:disabled),
+.track-menu__item:focus-visible {
+  background: var(--vynl-vinyle);
+}
+.track-menu__item:disabled {
+  color: var(--vynl-texte-2);
+  cursor: default;
+}
+.track-menu__item svg {
+  flex: none;
+  color: var(--vynl-texte-2);
+}
+.track-menu__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.track-menu__back {
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--vynl-bordure);
+  border-radius: 12px 12px 0 0;
+  font-weight: 600;
+}
+.track-menu__new {
+  color: var(--vynl-azur-clair);
+}
+.track-menu__new svg {
+  color: inherit;
+}
+.track-menu__create {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem;
+}
+.track-menu__create .input-field {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+}
+.track-menu__note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.875rem;
+}
+.track-menu__note--error {
+  color: var(--vynl-erreur);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .track-menu {
+    animation: track-menu-in 0.16s var(--vynl-ease-out) both;
+  }
+  .toast {
+    animation: toast-in 0.25s var(--vynl-ease-out) both;
+  }
+}
+@keyframes track-menu-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--player-bar-height) + 16px);
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--space-md));
+  translate: -50% 0;
+  pointer-events: none;
+}
+.toast {
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--vynl-sillon);
+  border-radius: 999px;
+  background: var(--vynl-abysse);
+  box-shadow: var(--vynl-lisere), var(--vynl-ombre);
+  font-size: 0.875rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
