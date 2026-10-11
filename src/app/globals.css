@@ -1112,18 +1112,37 @@ textarea {
   gap: 0.75rem;
   margin-top: var(--space-md);
 }
+/* Tailles des commandes en variables : sur les écrans très étroits tout rétrécit ensemble, au
+   lieu de laisser les boutons se comprimer (un bouton Lecture ovale, un groupe de travers). */
+.np {
+  --np-btn: 52px;
+  --np-play: 72px;
+  --np-gap: 1rem;
+}
+/* Les tailles pleines tiennent dans 349 px de large utile (écran de 381 px et plus) ; en dessous
+   le groupe déborderait, donc tout rétrécit. */
+@media (max-width: 380px) {
+  .np {
+    --np-btn: 44px;
+    --np-play: 64px;
+    --np-gap: 0.5rem;
+  }
+}
 .np__controls {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--np-gap);
   margin-top: var(--space-sm);
+}
+.np__controls > * {
+  flex: none;
 }
 .np__play {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 72px;
+  width: var(--np-play);
+  height: var(--np-play);
   border: none;
   border-radius: 50%;
   background: var(--vynl-degrade-vague);
@@ -1135,8 +1154,8 @@ textarea {
   cursor: default;
 }
 .skip-btn--lg {
-  width: 52px;
-  height: 52px;
+  width: var(--np-btn, 52px);
+  height: var(--np-btn, 52px);
 }
 .np__error {
   margin-top: var(--space-sm);
@@ -1158,8 +1177,8 @@ textarea {
   font-weight: 600;
 }
 .np__spacer {
-  width: 52px;
-  height: 52px;
+  width: var(--np-btn);
+  height: var(--np-btn);
   flex: none;
 }
 .np__volume {
@@ -1188,6 +1207,12 @@ textarea {
   }
   .np__info {
     max-width: none;
+  }
+  /* Une seule colonne : les commandes se centrent sur l'écran (sur grand écran elles restent
+     alignées à gauche, sous le titre). Le groupe est symétrique (aléatoire / suivant et
+     son vide de même largeur), donc le bouton Lecture tombe pile au milieu. */
+  .np__controls {
+    justify-content: center;
   }
 }
 

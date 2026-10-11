@@ -138,7 +138,7 @@ export function NowPlaying() {
         <SeekControl className="np__seek" />
 
         <div className="np__controls">
-          <ShuffleButton className="skip-btn--lg" />
+          <ShuffleButton className="skip-btn--lg" size={22} />
           <button onClick={previous} disabled={isLoading} aria-label="Previous track" className="icon-btn skip-btn skip-btn--lg">
             <SkipPreviousIcon size={24} />
           </button>
