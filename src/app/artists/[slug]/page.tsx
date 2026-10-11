@@ -2,6 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
 import { TrackGrid, type Track } from "@/components/TrackGrid";
+import { AlbumGrid } from "@/components/AlbumGrid";
+import { fetchAlbums } from "@/lib/albums";
 import { FollowButton } from "@/components/FollowButton";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
 
@@ -34,9 +36,10 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
     notFound();
   }
 
-  const [{ following }, savedTrackIds] = await Promise.all([
+  const [{ following }, savedTrackIds, albumsRes] = await Promise.all([
     api.get<{ following: boolean }>(`/me/follows/${artist.id}`, { accessToken: session.access_token }),
     getSavedTrackIds(session.access_token),
+    fetchAlbums(`artist_id=${artist.id}&limit=50`),
   ]);
 
   const tracksWithArtist: Track[] = artist.tracks.map((t) => ({ ...t, artists: { name: artist.name } }));
@@ -81,6 +84,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             {artist.bio}
           </p>
         )}
+
+        <section style={{ marginTop: "var(--space-xl)" }}>
+          <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Albums</h2>
+          <AlbumGrid albums={albumsRes} emptyMessage="No releases published yet." />
+        </section>
 
         <section style={{ marginTop: "var(--space-xl)", paddingBottom: "var(--space-xl)" }}>
           <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Tracks</h2>

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
 import { TrackGrid, type Track } from "@/components/TrackGrid";
+import { AlbumGrid } from "@/components/AlbumGrid";
+import { fetchAlbums } from "@/lib/albums";
 import { ArtistGrid, type Artist } from "@/components/ArtistGrid";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
 
@@ -27,6 +29,7 @@ export default async function SearchPage({
       ? Promise.all([
           api.get<{ data: Track[] }>(`/tracks?limit=24&q=${encodeURIComponent(query)}`),
           api.get<{ data: Artist[] }>(`/artists?limit=24&q=${encodeURIComponent(query)}`),
+          fetchAlbums(`limit=24&q=${encodeURIComponent(query)}`),
         ])
       : Promise.resolve(null),
     getSavedTrackIds(session.access_token),
@@ -40,7 +43,7 @@ export default async function SearchPage({
           <input
             type="text"
             name="q"
-            placeholder="Search tracks or artists" aria-label="Search tracks or artists"
+            placeholder="Search tracks, albums or artists" aria-label="Search tracks, albums or artists"
             defaultValue={query}
             autoFocus
             className="input-field"
@@ -62,6 +65,11 @@ export default async function SearchPage({
               savedTrackIds={savedTrackIds}
               source={{ context: "search" }}
             />
+          </section>
+
+          <section>
+            <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Albums</h2>
+            <AlbumGrid albums={results[2]} emptyMessage={`No albums match "${query}".`} />
           </section>
 
           <section>

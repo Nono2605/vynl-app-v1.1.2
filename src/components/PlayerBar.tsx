@@ -3,13 +3,26 @@
 import { useRef, useState } from "react";
 import { usePlayer } from "@/lib/player/PlayerContext";
 import { formatDuration } from "@/lib/formatDuration";
-import { PlayIcon, PauseIcon, SpinnerIcon } from "@/components/icons";
+import { PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
 import { VinylCover } from "@/components/VinylCover";
 
 // La mise en page (grille desktop, deux lignes sur mobile) est dans
 // globals.css (.player-bar*) ; ici, seulement l'apparence des éléments.
 export function PlayerBar() {
-  const { track, isPlaying, isLoading, isBuffering, currentTime, duration, error, toggle, seek } = usePlayer();
+  const {
+    track,
+    isPlaying,
+    isLoading,
+    isBuffering,
+    currentTime,
+    duration,
+    error,
+    hasNext,
+    toggle,
+    seek,
+    next,
+    previous,
+  } = usePlayer();
 
   // Pendant un glissement du curseur on affiche la valeur du doigt, pas
   // currentTime (que timeupdate réécrit en continu et qui faisait sauter le
@@ -41,21 +54,39 @@ export function PlayerBar() {
       </div>
 
       <div className="player-bar__controls">
-        <button
-          onClick={toggle}
-          disabled={isLoading}
-          aria-label={isPlaying ? "Pause" : "Play"}
-          className="icon-btn player-bar__play"
-          style={playButtonStyle}
-        >
-          {isLoading || isBuffering ? (
-            <SpinnerIcon size={20} />
-          ) : isPlaying ? (
-            <PauseIcon size={20} />
-          ) : (
-            <PlayIcon size={20} />
-          )}
-        </button>
+        <div className="player-bar__buttons">
+          <button
+            onClick={previous}
+            disabled={isLoading}
+            aria-label="Previous track"
+            className="icon-btn skip-btn"
+          >
+            <SkipPreviousIcon size={18} />
+          </button>
+          <button
+            onClick={toggle}
+            disabled={isLoading}
+            aria-label={isPlaying ? "Pause" : "Play"}
+            className="icon-btn player-bar__play"
+            style={playButtonStyle}
+          >
+            {isLoading || isBuffering ? (
+              <SpinnerIcon size={20} />
+            ) : isPlaying ? (
+              <PauseIcon size={20} />
+            ) : (
+              <PlayIcon size={20} />
+            )}
+          </button>
+          <button
+            onClick={next}
+            disabled={isLoading || !hasNext}
+            aria-label="Next track"
+            className="icon-btn skip-btn"
+          >
+            <SkipNextIcon size={18} />
+          </button>
+        </div>
         <div className="player-bar__seek">
           <span style={{ ...timeStyle, textAlign: "right" }}>{formatDuration(Math.floor(shownTime))}</span>
           <input

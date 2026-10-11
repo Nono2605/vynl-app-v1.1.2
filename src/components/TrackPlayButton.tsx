@@ -8,12 +8,15 @@ export function TrackPlayButton({
   track,
   size = 36,
   source,
+  queue,
 }: {
   track: PlayerTrack;
   /** Diamètre en px — plus petit pour les listes en ligne, plus grand pour les cartes. */
   size?: number;
   /** D'où vient la lecture (album, playlist, découverte…) : enregistré avec l'écoute. */
   source?: PlaySource;
+  /** La liste d'où vient ce morceau : à sa fin, le suivant de la liste démarre tout seul. */
+  queue?: PlayerTrack[];
 }) {
   const { track: current, isPlaying, isLoading, play, toggle } = usePlayer();
   const isCurrent = current?.id === track.id;
@@ -22,7 +25,7 @@ export function TrackPlayButton({
 
   function handleClick() {
     if (isCurrent) toggle();
-    else play(track, source);
+    else play(track, source, queue);
   }
 
   return (

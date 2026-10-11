@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
 import { TrackGrid, type Track } from "@/components/TrackGrid";
+import { AlbumGrid } from "@/components/AlbumGrid";
+import { fetchAlbums } from "@/lib/albums";
 import { ArtistGrid, type Artist } from "@/components/ArtistGrid";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
 
@@ -15,7 +17,8 @@ export default async function DiscoverPage() {
     redirect("/login");
   }
 
-  const [tracksRes, artistsRes, savedTrackIds] = await Promise.all([
+  const [albumsRes, tracksRes, artistsRes, savedTrackIds] = await Promise.all([
+    fetchAlbums("limit=12"),
     api.get<{ data: Track[] }>("/tracks?limit=12"),
     api.get<{ data: Artist[] }>("/artists?limit=12"),
     getSavedTrackIds(session.access_token),
@@ -26,8 +29,13 @@ export default async function DiscoverPage() {
       <section>
         <h1 className="display-title" style={{ marginBottom: "var(--space-sm)" }}>Discover</h1>
         <p style={{ color: "var(--vynl-texte-2)" }}>
-          Every track published on Vynl, most recent first.
+          Everything published on Vynl, most recent first.
         </p>
+      </section>
+
+      <section>
+        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New releases</h2>
+        <AlbumGrid albums={albumsRes} emptyMessage="No releases published yet. Check back soon." />
       </section>
 
       <section>

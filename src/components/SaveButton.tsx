@@ -8,10 +8,13 @@ export function SaveButton({
   itemType,
   itemId,
   initialSaved,
+  size = 18,
 }: {
   itemType: string;
   itemId: string;
   initialSaved: boolean;
+  /** Taille du cœur en px (les lignes de liste gardent 18, une page de détail peut en vouloir plus). */
+  size?: number;
 }) {
   const [saved, setSaved] = useState(initialSaved);
   const [pending, startTransition] = useTransition();
@@ -47,7 +50,7 @@ export function SaveButton({
         opacity: pending ? 0.6 : 1,
       }}
     >
-      <HeartIcon size={18} filled={saved} />
+      <HeartIcon size={size} filled={saved} />
     </button>
   );
 }

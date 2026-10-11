@@ -2,6 +2,7 @@ import { SaveButton } from "@/components/SaveButton";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
 import type { PlaySource } from "@/lib/player/types";
 import { VinylCover } from "@/components/VinylCover";
+import type { PlayerTrack } from "@/lib/player/PlayerContext";
 
 export interface Track {
   id: string;
@@ -28,6 +29,15 @@ export function TrackGrid({
     return <p style={{ color: "var(--vynl-texte-2)" }}>{emptyMessage}</p>;
   }
 
+  // La grille entière est la file d'attente : une fois un morceau lancé, les
+  // suivants s'enchaînent dans l'ordre d'affichage.
+  const queue: PlayerTrack[] = tracks.map((track) => ({
+    id: track.id,
+    title: track.title,
+    artistName: track.artists?.name ?? "Unknown artist",
+    coverUrl: track.albums?.cover_url ?? null,
+  }));
+
   return (
     <div
       style={{
@@ -36,7 +46,7 @@ export function TrackGrid({
         gap: "var(--space-md)",
       }}
     >
-      {tracks.map((track) => (
+      {tracks.map((track, index) => (
         <article key={track.id} className="hover-card">
           <div style={{ position: "relative", width: "100%", marginBottom: "0.65rem" }}>
             <VinylCover src={track.albums?.cover_url ?? null} />
@@ -50,14 +60,10 @@ export function TrackGrid({
               }}
             >
               <TrackPlayButton
-                track={{
-                  id: track.id,
-                  title: track.title,
-                  artistName: track.artists?.name ?? "Unknown artist",
-                  coverUrl: track.albums?.cover_url ?? null,
-                }}
+                track={queue[index]}
                 size={44}
                 source={source}
+                queue={queue}
               />
             </div>
             {savedTrackIds && (

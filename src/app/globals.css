@@ -582,6 +582,31 @@ textarea {
   align-items: center;
   gap: 0.35rem;
 }
+.player-bar__buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+/* Précédent / suivant : discrets, le bouton Lecture reste le seul à avoir de la lueur. */
+.skip-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--vynl-texte);
+  cursor: pointer;
+}
+.skip-btn:disabled {
+  color: var(--vynl-texte-3);
+  cursor: default;
+}
+.skip-btn:disabled:hover {
+  transform: none;
+}
 .player-bar__seek {
   display: flex;
   align-items: center;
@@ -608,8 +633,9 @@ textarea {
   .player-bar__controls {
     display: contents;
   }
-  .player-bar__play {
+  .player-bar__buttons {
     grid-area: play;
+    gap: 0.25rem;
   }
   .player-bar__seek {
     grid-area: seek;

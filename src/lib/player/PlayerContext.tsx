@@ -3,6 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { sendHeartbeat, startPlay } from "@/app/actions/player";
 import type { HeartbeatState, PlayFailure, PlaySource, StartPlayResult } from "@/lib/player/types";
+import {
+  EMPTY_QUEUE,
+  hasNext,
+  hasPrevious,
+  moveTo,
+  nextIndex,
+  previousAction,
+  startQueue,
+  type Queue,
+} from "@/lib/player/queue";
 
 export interface PlayerTrack {
   id: string;
@@ -25,10 +35,20 @@ interface PlayerState {
 }
 
 interface PlayerContextValue extends PlayerState {
-  /** `source` : d'où vient la lecture (album, playlist…), conservé avec l'écoute. */
-  play: (track: PlayerTrack, source?: PlaySource) => void;
+  /**
+   * `source` : d'où vient la lecture (album, playlist…), conservé avec l'écoute.
+   * `queue` : la liste d'où vient le morceau ; à la fin du morceau, le suivant de
+   * cette liste démarre tout seul. Sans elle, le morceau joue seul.
+   */
+  play: (track: PlayerTrack, source?: PlaySource, queue?: readonly PlayerTrack[]) => void;
   toggle: () => void;
   seek: (seconds: number) => void;
+  /** Morceau suivant de la file. Sans effet en fin de file ou pendant un chargement. */
+  next: () => void;
+  /** Relance le morceau s'il est entamé depuis plus de 3 s, sinon revient au précédent. */
+  previous: () => void;
+  hasNext: boolean;
+  hasPrevious: boolean;
   /** Arrête la lecture et vide le lecteur (ex. à la déconnexion). */
   stop: () => void;
 }
@@ -127,7 +147,20 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const beatStateRef = useRef<"playing" | "paused" | null>(null);
   const sourceRef = useRef<PlaySource | undefined>(undefined);
 
+  // File d'attente : la liste d'où vient la lecture et la position dans cette liste.
+  // La ref sert aux décisions (callbacks stables), le state seulement à l'affichage
+  // des boutons Précédent / Suivant.
+  const queueRef = useRef<Queue<PlayerTrack>>(EMPTY_QUEUE);
+  const [queueNav, setQueueNav] = useState({ hasNext: false, hasPrevious: false });
+
   const [state, setState] = useState<PlayerState>(initialState);
+
+  const setQueue = useCallback((queue: Queue<PlayerTrack>) => {
+    queueRef.current = queue;
+    const next = hasNext(queue);
+    const previous = hasPrevious(queue);
+    setQueueNav((prev) => (prev.hasNext === next && prev.hasPrevious === previous ? prev : { hasNext: next, hasPrevious: previous }));
+  }, []);
 
   const fail = useCallback((message: string) => {
     setState((s) => ({ ...s, isLoading: false, isBuffering: false, error: message }));
@@ -308,6 +341,19 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     [endPlay, fail]
   );
 
+  // Joue le morceau à cette position de la file. Pas de clé `source` : la file
+  // garde la source de la lecture d'origine (l'album, la playlist…).
+  const playAt = useCallback(
+    (index: number) => {
+      const queue = queueRef.current;
+      const track = queue.items[index];
+      if (!track) return;
+      setQueue(moveTo(queue, index));
+      void load(track);
+    },
+    [load, setQueue]
+  );
+
   const resume = useCallback(
     (audio: HTMLAudioElement) => {
       setState((s) => ({ ...s, error: null }));
@@ -319,10 +365,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   );
 
   const play = useCallback(
-    (track: PlayerTrack, source?: PlaySource) => {
+    (track: PlayerTrack, source?: PlaySource, queue?: readonly PlayerTrack[]) => {
       const audio = audioRef.current;
       if (!audio) return;
       if (fetchingIdRef.current === track.id) return; // déjà en cours de chargement
+      setQueue(startQueue(track, queue));
       // Même morceau, source valide ET lecture encore ouverte : on reprend. Sinon
       // (échec, ou morceau terminé : réécouter = nouvelle lecture) on recharge.
       if (loadedIdRef.current === track.id && playIdRef.current !== null) {
@@ -331,7 +378,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       }
       void load(track, { source }); // la clé `source` est toujours présente, même si elle vaut undefined
     },
-    [load, resume]
+    [load, resume, setQueue]
   );
 
   const toggle = useCallback(() => {
@@ -362,9 +409,33 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     [beat]
   );
 
+  const next = useCallback(() => {
+    // Pendant un chargement on ignore : chaque démarrage ouvre une lecture côté
+    // serveur, en enchaîner trois d'affilée en laisserait deux vides.
+    if (fetchingIdRef.current) return;
+    const upcoming = nextIndex(queueRef.current);
+    if (upcoming !== null) playAt(upcoming);
+  }, [playAt]);
+
+  const previous = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || fetchingIdRef.current) return;
+    const action = previousAction(queueRef.current, audio.currentTime);
+    if (action.kind === "goto") {
+      playAt(action.index);
+      return;
+    }
+    const track = trackRef.current;
+    if (!track) return;
+    // Lecture déjà close (morceau fini ou en panne) : on le relance, sinon on revient au début.
+    if (playIdRef.current === null) void load(track);
+    else seek(0);
+  }, [playAt, load, seek]);
+
   const stop = useCallback(() => {
     const audio = audioRef.current;
     endPlay("closed"); // avant de vider l'<audio> : on a besoin de sa position
+    setQueue(EMPTY_QUEUE);
     requestRef.current++; // invalide tout chargement en cours
     trackRef.current = null;
     loadedIdRef.current = null;
@@ -377,7 +448,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audio.load();
     }
     setState(initialState);
-  }, [endPlay]);
+  }, [endPlay, setQueue]);
 
   const handleError = useCallback(
     (audio: HTMLAudioElement) => {
@@ -412,7 +483,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <PlayerContext.Provider value={{ ...state, play, toggle, seek, stop }}>
+    <PlayerContext.Provider
+      value={{ ...state, ...queueNav, play, toggle, seek, next, previous, stop }}
+    >
       {children}
       <audio
         ref={audioRef}
@@ -462,6 +535,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           setState((s) => ({ ...s, isPlaying: false, currentTime: 0 }));
           // Morceau terminé : la lecture se clôt. Réécouter ouvrira une nouvelle lecture.
           endPlay("ended", e.currentTarget.currentTime);
+          // Enchaînement : le morceau suivant de la file démarre tout seul.
+          const upcoming = nextIndex(queueRef.current);
+          if (upcoming !== null) playAt(upcoming);
         }}
         onError={(e) => handleError(e.currentTarget)}
       />

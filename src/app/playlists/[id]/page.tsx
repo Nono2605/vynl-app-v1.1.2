@@ -4,6 +4,8 @@ import { api } from "@/lib/api";
 import { formatDuration } from "@/lib/formatDuration";
 import { removeTrackFromPlaylist, deletePlaylist } from "@/app/actions/playlists";
 import { TrackPlayButton } from "@/components/TrackPlayButton";
+import { PlayAllButton } from "@/components/PlayAllButton";
+import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { PlaylistVisibilityToggle } from "@/components/PlaylistVisibilityToggle";
 import { AddTrackSearch } from "./AddTrackSearch";
 
@@ -44,6 +46,13 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
     notFound();
   }
 
+  const queue: PlayerTrack[] = playlist.tracks.map((t) => ({
+    id: t.id,
+    title: t.title,
+    artistName: t.artists?.name ?? "Unknown artist",
+    coverUrl: playlist.cover_url,
+  }));
+
   return (
     <div style={{ padding: "var(--space-lg)", maxWidth: 720 }}>
       <div style={{ display: "flex", gap: "var(--space-lg)", marginBottom: "var(--space-xl)", flexWrap: "wrap" }}>
@@ -61,6 +70,9 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
         <div style={{ alignSelf: "flex-end", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <h1 style={{ fontSize: "2rem" }}>{playlist.title}</h1>
           {playlist.description && <p style={{ color: "var(--vynl-texte-2)" }}>{playlist.description}</p>}
+          <div>
+            <PlayAllButton tracks={queue} source={{ context: "playlist", id: playlist.id }} />
+          </div>
           {playlist.is_owner && (
             <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
               <PlaylistVisibilityToggle playlistId={playlist.id} initialIsPublic={playlist.is_public} />
@@ -94,14 +106,10 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
               >
                 <span style={{ color: "var(--vynl-texte-3)", fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>{index + 1}</span>
                 <TrackPlayButton
-                  track={{
-                    id: track.id,
-                    title: track.title,
-                    artistName: track.artists?.name ?? "Unknown artist",
-                    coverUrl: playlist.cover_url,
-                  }}
+                  track={queue[index]}
                   size={28}
                   source={{ context: "playlist", id: playlist.id }}
+                  queue={queue}
                 />
                 <span style={{ flex: 1 }}>
                   {track.title}{" "}

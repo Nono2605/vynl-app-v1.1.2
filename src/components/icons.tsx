@@ -35,6 +35,25 @@ export function PauseIcon({ size = 20 }: IconProps) {
   return <Icon name="pause" size={size} />;
 }
 
+// Précédent / suivant : pas dans le sprite, dessinés pleins comme lecture et pause.
+export function SkipNextIcon({ size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+      <path d="M5.5 6.4v11.2a1 1 0 0 0 1.52.85l8.9-5.6a1 1 0 0 0 0-1.7l-8.9-5.6a1 1 0 0 0-1.52.85Z" />
+      <rect x="17" y="5.5" width="2.5" height="13" rx="1.25" />
+    </svg>
+  );
+}
+
+export function SkipPreviousIcon({ size = 20 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden focusable="false">
+      <path d="M18.5 6.4v11.2a1 1 0 0 1-1.52.85l-8.9-5.6a1 1 0 0 1 0-1.7l8.9-5.6a1 1 0 0 1 1.52.85Z" />
+      <rect x="4.5" y="5.5" width="2.5" height="13" rx="1.25" />
+    </svg>
+  );
+}
+
 export function SpinnerIcon({ size = 20 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden>
