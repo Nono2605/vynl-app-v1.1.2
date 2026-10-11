@@ -21,7 +21,7 @@ export function Crate({ albums, emptyMessage }: { albums: Album[] | null; emptyM
         const year = album.release_date ? new Date(album.release_date).getUTCFullYear() : null;
         const kind = [album.type ? albumTypeLabel(album.type) : null, year].filter(Boolean).join(" · ");
         return (
-          <li key={album.id} className="crate__item" data-reveal>
+          <li key={album.id} className="crate__item" data-reveal suppressHydrationWarning>
             <Link href={`/albums/${album.id}`} className="crate__link">
               <span className={`crate__disc${album.cover_url ? "" : " crate__disc--blank"}`}>
                 {album.cover_url && (

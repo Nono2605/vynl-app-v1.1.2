@@ -48,8 +48,8 @@ export function TrackGrid({
       }}
     >
       {tracks.map((track, index) => (
-        <article key={track.id} className="hover-card" data-reveal>
-          <div data-tilt style={{ position: "relative", width: "100%", marginBottom: "0.65rem" }}>
+        <article key={track.id} className="hover-card" data-reveal suppressHydrationWarning>
+          <div data-tilt suppressHydrationWarning style={{ position: "relative", width: "100%", marginBottom: "0.65rem" }}>
             <VinylCover src={track.albums?.cover_url ?? null} />
             <div
               style={{

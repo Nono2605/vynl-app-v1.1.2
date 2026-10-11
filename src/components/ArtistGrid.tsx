@@ -29,9 +29,11 @@ export function ArtistGrid({ artists, emptyMessage }: { artists: Artist[]; empty
           className="hover-card"
           style={{ textAlign: "center" }}
           data-reveal
+          suppressHydrationWarning
         >
           <div
             data-tilt
+            suppressHydrationWarning
             style={{
               width: "100%",
               aspectRatio: "1",

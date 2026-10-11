@@ -10,6 +10,10 @@ import { useEffect } from "react";
 // no-preference ; ici on sort tout de suite si l'utilisateur a demandé moins de mouvement.
 // Les pages changent sans rechargement : un MutationObserver prend les éléments
 // qui arrivent après coup.
+// Ces éléments sont posés sans état « visible » par React ; ici on leur ajoute une classe et un
+// décalage. La page est dans un Suspense (loading.tsx) : elle peut s'hydrater APRÈS ce premier
+// passage. Les éléments portent donc suppressHydrationWarning, sinon React signale en
+// développement que le HTML du serveur ne correspond plus (la classe ajoutée est conservée).
 const STEP_MS = 70;
 const MAX_TILT = 7;
 

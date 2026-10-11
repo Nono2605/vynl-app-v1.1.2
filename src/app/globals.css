@@ -1445,17 +1445,74 @@ textarea {
     }
   }
 }
+/* Mobile et tablette portrait : le disque ne passe plus sous le texte (il mangeait tout l'écran)
+   mais à côté du titre. Le bloc de texte devient transparent pour la grille (display: contents) :
+   surtitre et titre restent à gauche, le disque tient à droite sur leurs deux lignes, et le
+   reste (phrase, boutons, dernier morceau) prend toute la largeur dessous. */
 @media (max-width: 860px) {
   .hero {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto;
+    align-items: center;
+    column-gap: var(--space-md);
+    row-gap: 0;
     min-height: 0;
-    gap: var(--space-md);
+    padding-block: var(--space-md) var(--space-lg);
+    /* Une seule lueur, derrière le disque, qui s'éteint avant le bas du hero. */
+    background: radial-gradient(75% 42% at 82% 30%, rgba(0, 89, 249, 0.3), transparent);
+  }
+  .hero__copy {
+    display: contents;
+  }
+  .hero__eyebrow {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+  }
+  .hero__title {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    font-size: clamp(1.9rem, 9vw, 2.75rem);
   }
   .hero__disc {
-    justify-self: center;
-    width: 112vw;
-    max-width: none;
-    margin: 0 -6vw;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: clamp(96px, 30vw, 170px);
+    margin: 0;
+    justify-self: end;
+  }
+  .hero__lead,
+  .hero__actions,
+  .hero__latest {
+    grid-column: 1 / -1;
+  }
+  .hero__lead {
+    margin-top: var(--space-sm);
+  }
+  .hero__actions,
+  .hero__latest {
+    margin-top: var(--space-sm);
+  }
+  /* Les sillons en filigrane restent derrière le disque, plus petits. */
+  .hero::before {
+    right: -30vw;
+    top: 70px;
+    width: 90vw;
+    translate: 0 0;
+  }
+  /* Le défilement fait seulement tourner le disque : il ne monte plus sur le titre. */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .hero__disc {
+        animation-name: hero-drift-turn;
+      }
+    }
+  }
+}
+@keyframes hero-drift-turn {
+  to {
+    rotate: 32deg;
   }
 }
 

@@ -40,7 +40,7 @@ export function DiscoverView({
   return (
     <>
       <section className="hero" aria-labelledby="hero-title">
-        <div>
+        <div className="hero__copy">
           <p className="hero__eyebrow rise">New on Vynl</p>
           <h1 id="hero-title" className="hero__title">
             <span className="line">
@@ -73,12 +73,12 @@ export function DiscoverView({
 
       <div style={{ padding: "0 var(--space-lg) var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
         <section>
-          <h2 data-reveal style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New releases</h2>
+          <h2 data-reveal suppressHydrationWarning style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New releases</h2>
           <Crate albums={albums} emptyMessage="No releases published yet. Check back soon." />
         </section>
 
         <section>
-          <h2 data-reveal style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New tracks</h2>
+          <h2 data-reveal suppressHydrationWarning style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New tracks</h2>
           <TrackGrid
             tracks={tracks}
             emptyMessage="No tracks published yet. Check back soon."
@@ -88,7 +88,7 @@ export function DiscoverView({
         </section>
 
         <section>
-          <h2 data-reveal style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Artists</h2>
+          <h2 data-reveal suppressHydrationWarning style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Artists</h2>
           <ArtistGrid artists={artists} emptyMessage="No artists yet. Check back soon." />
         </section>
       </div>
