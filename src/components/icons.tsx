@@ -86,6 +86,15 @@ export function HeartIcon({ size = 20, filled = false }: IconProps & { filled?: 
   );
 }
 
+export function SearchIcon({ size = 18 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden focusable="false">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2" />
+    </svg>
+  );
+}
+
 export function GlobeIcon({ size = 16 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} aria-hidden>

@@ -392,15 +392,33 @@ textarea {
   border-bottom: 1px solid transparent;
   border-image: var(--vynl-filet) 1;
 }
+/* Trois zones : logo à gauche, recherche au milieu de l'écran, liens à droite.
+   Les colonnes latérales sont égales (1fr), donc la recherche est centrée sur
+   la page même quand les liens et le logo n'ont pas la même largeur. Le panneau
+   (recherche + liens) n'est un conteneur qu'en mobile ; ici ses enfants sont
+   directement des cellules de la grille. */
 .site-header__inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(220px, 480px) minmax(max-content, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-md);
   min-height: 72px;
   padding: 0 var(--space-lg);
 }
+.site-header__inner > .logo {
+  grid-column: 1;
+  justify-self: start;
+}
+.site-header__panel {
+  display: contents;
+}
+.site-header__search {
+  grid-column: 2;
+  min-width: 0;
+}
 .site-header__nav {
+  grid-column: 3;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -448,25 +466,33 @@ textarea {
   color: var(--vynl-texte);
 }
 @media (max-width: 768px) {
+  .site-header__inner {
+    display: flex;
+    justify-content: space-between;
+  }
   .nav-toggle {
     display: inline-flex;
   }
-  .site-header__nav {
+  .site-header__panel {
     display: none;
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
     flex-direction: column;
-    align-items: stretch;
-    gap: 0.25rem;
+    gap: var(--space-sm);
     padding: var(--space-sm) var(--space-lg) var(--space-md);
     background: var(--vynl-abysse);
     border-bottom: 1px solid var(--vynl-bordure);
     box-shadow: var(--vynl-ombre);
   }
-  .site-header[data-open="true"] .site-header__nav {
+  .site-header[data-open="true"] .site-header__panel {
     display: flex;
+  }
+  .site-header__nav {
+    flex-direction: column;
+    align-items: stretch;
+    justify-self: stretch;
   }
   .nav-link {
     padding: 0.75rem 0.9rem;
@@ -1540,4 +1566,240 @@ textarea {
 .crate__kind {
   color: var(--vynl-texte-3);
   font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------
+   Recherche en direct, au centre de la barre du haut (SearchBox).
+   --------------------------------------------------------------------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.search {
+  position: relative;
+  width: 100%;
+}
+.search__field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: 999px;
+  background: rgba(23, 32, 79, 0.65);
+  color: var(--vynl-texte-2);
+  transition: border-color var(--transition-base), background-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.search__field:hover {
+  border-color: var(--vynl-sillon);
+}
+/* Le contour cyan du focus est porté par le champ entier (la loupe et le champ font un seul bloc). */
+.search__field:focus-within {
+  border-color: var(--vynl-cyan);
+  background: var(--vynl-vinyle);
+  color: var(--vynl-texte);
+  box-shadow: 0 0 0 3px rgba(25, 227, 255, 0.18);
+}
+.search__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--vynl-texte);
+  font: inherit;
+  outline: none;
+}
+.search__input::placeholder {
+  color: var(--vynl-texte-2);
+}
+.search__aside {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.search__kbd {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: 6px;
+  color: var(--vynl-texte-2);
+  font: inherit;
+  font-size: 0.75rem;
+}
+.search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--vynl-texte-2);
+  cursor: pointer;
+}
+.search__clear:hover {
+  color: var(--vynl-texte);
+}
+.search__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  z-index: var(--z-menu);
+  width: min(560px, calc(100vw - 2 * var(--space-lg)));
+  max-height: min(70vh, 560px);
+  padding: 0.5rem;
+  overflow-y: auto;
+  translate: -50% 0;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: var(--vynl-rayon-panneau);
+  background: var(--vynl-abysse);
+  box-shadow: var(--vynl-lisere), var(--vynl-ombre);
+}
+.search__list[data-loading] {
+  opacity: 0.6;
+  transition: opacity var(--transition-base);
+}
+.search__heading {
+  padding: 0.6rem 0.75rem 0.25rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.search__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: var(--vynl-rayon-carte);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+/* Survol ou flèches du clavier : même fond, plus un filet cyan (le cyan marque ce qui est actif). */
+.search__row[data-active] {
+  background: var(--vynl-vinyle);
+  box-shadow: inset 0 0 0 1px rgba(25, 227, 255, 0.45);
+}
+.search__thumb {
+  display: block;
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+.search__thumb--round {
+  border-radius: 50%;
+}
+.search__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.search__name,
+.search__sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.search__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.search__sub {
+  color: var(--vynl-texte-2);
+  font-size: 0.8125rem;
+}
+.search__mark {
+  background: none;
+  color: var(--vynl-cyan);
+}
+.search__play {
+  display: inline-flex;
+  flex: none;
+  color: var(--vynl-texte-2);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.search__row[data-active] .search__play {
+  opacity: 1;
+}
+.search__all {
+  justify-content: center;
+  margin-top: 0.35rem;
+  color: var(--vynl-azur-clair);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.search__empty,
+.search__note {
+  padding: 0.9rem 0.75rem;
+  color: var(--vynl-texte-2);
+  font-size: 0.875rem;
+}
+.search__note {
+  padding-block: 0.5rem 0.25rem;
+  font-size: 0.8125rem;
+}
+.search__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+}
+.search__skeleton span {
+  height: 40px;
+  border-radius: var(--vynl-rayon-carte);
+  background: linear-gradient(90deg, rgba(31, 42, 99, 0.5), rgba(50, 66, 140, 0.35), rgba(31, 42, 99, 0.5));
+  background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .search__panel {
+    animation: search-in 0.2s var(--vynl-ease-out) both;
+  }
+  .search__skeleton span {
+    animation: search-shimmer 1.2s linear infinite;
+  }
+}
+@keyframes search-in {
+  from {
+    opacity: 0;
+    translate: -50% -6px;
+  }
+}
+@keyframes search-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+/* Mobile : la recherche est en haut du panneau du menu, sa liste prend toute la largeur. */
+@media (max-width: 768px) {
+  .search__panel {
+    left: 0;
+    width: 100%;
+    max-height: 60vh;
+    translate: 0 0;
+  }
+  @keyframes search-in {
+    from {
+      opacity: 0;
+    }
+  }
 }

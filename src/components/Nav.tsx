@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { NavLink } from "@/components/NavLink";
 import { AccountMenu } from "@/components/AccountMenu";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SearchBox } from "@/components/SearchBox";
 
 interface Me {
   profile: { username: string } | null;
@@ -27,9 +28,8 @@ export async function Nav() {
   }
 
   return (
-    <SiteHeader>
+    <SiteHeader search={session ? <SearchBox /> : null}>
       <NavLink href="/discover">Discover</NavLink>
-      <NavLink href="/search">Search</NavLink>
       {session ? (
         <>
           <NavLink href="/library">Library</NavLink>
