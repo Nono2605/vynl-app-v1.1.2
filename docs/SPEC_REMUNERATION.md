@@ -689,7 +689,7 @@ GEMA) : le risque de plagiat ou de reprise d'œuvres protégées est plus élev�
 
 | # | Question | Proposition |
 |---|---|---|
-| R1 | Quel catalogue exactement ? | **100 % IA** seulement au départ ; l'hybride exige la confirmation que l'auteur n'a pas cédé ces œuvres à une société de gestion. |
+| R1 | Quel catalogue exactement ? | **DÉCIDÉ (12 oct. 2026) : la bêta commence 100 % IA.** Les morceaux déclarés `hybrid` (et `human`, hors positionnement) sont **mis en attente**, pas refusés (voir 15.5). L'hybride exigera plus tard la confirmation que l'auteur n'a pas cédé ces œuvres à une société de gestion. |
 | R2 | Territoires au lancement | Suisse seule réduit le nombre de licences ; Suisse + UE (choix actuel) ajoute l'art. 17 et des sociétés étrangères. |
 | R3 | Licences | Avis d'un avocat PI, puis contact avec SUISA (et les sociétés étrangères si l'UE est visée) **avant** le lancement. |
 | R4 | Retenue C5 | Durée à fixer (par exemple 30 à 60 jours) ; à écrire dans les conditions. |
@@ -699,6 +699,50 @@ GEMA) : le risque de plagiat ou de reprise d'œuvres protégées est plus élev�
 Sources : SUISA, « Les chansons générées par IA et le droit d'auteur » (blog.suisa.ch) et communiqué de mars 2024 ;
 art. 39d LDA (fedlex) ; directive (UE) 2019/790 art. 17 et lignes directrices de la Commission (COM(2021) 288) ;
 documentation ACRCloud et Pex. Les affirmations sur les fournisseurs viennent de leur propre documentation.
+
+### 15.5 Détection : principe, noms d'artiste, doublons *(proposé, 12 oct. 2026)*
+
+**Principe.** Aucun contrôle n'est sûr à 100 % : ni les prestataires de reconnaissance, ni nous. Le droit demande des
+« meilleurs efforts » (UE) et des mesures « raisonnables » (Suisse), pas la perfection. Il faut donc :
+(1) **plusieurs signaux indépendants** ; (2) une **décision graduée** : chaque contrôle rend `ok` / `warn` / `fail`
+(mécanisme déjà prévu dans `moderation.ts` ; un `fail` bloque la publication, un `warn` demande une relecture humaine) ;
+(3) une **trace de chaque contrôle**, qui est la preuve de diligence ; (4) des contrôles **après** publication aussi
+(nouveaux signalements, bases de référence qui s'enrichissent chaque jour). Le risque résiduel est traité par C4
+(retrait et blocage des ré-envois), C5 (retenue), C1 (indemnisation), et éventuellement une assurance de responsabilité.
+
+**Règle de la bêta (décidée).** Seuls les morceaux déclarés `ai` se publient. `hybrid` et `human` sont **enregistrés
+mais en attente** : un contrôle bloquant « held » côté serveur (même mécanisme que `rejected`), levé par un réglage
+(`ACCEPTED_PROVENANCES`) le jour où l'on ouvre l'hybride. Le Studio l'explique clairement (« enregistré, pas encore
+accepté pendant la bêta »). `human` n'est pas dans le positionnement : à confirmer.
+
+**Noms d'artiste** (aujourd'hui : unicité interne sans accents, casse ni ponctuation ; mots réservés ; mélange de
+caractères latins et cyrilliques refusé). On ne peut pas prouver qu'un nom n'existe pas ailleurs, et plusieurs artistes
+peuvent légitimement le partager : on réduit le risque d'**imitation** d'un artiste connu.
+
+| # | Contrôle | Détail |
+|---|---|---|
+| N1 | Unicité interne | En place. |
+| N2 | Ressemblance interne | À ajouter : similarité (trigrammes Postgres `pg_trgm`) et phonétique, pour attraper « Daftpunk », « Dafft Punk ». `warn`. |
+| N3 | Artistes réels connus | À ajouter : recherche automatique dans **MusicBrainz** (données de base en CC0 ; un appel par seconde sur le service public, copie locale pour le volume ; usage commercial du service public sous formule payante). Un second catalogue (Deezer) à confirmer, ses conditions n'ayant pas été vérifiées. Correspondance exacte ou proche avec un artiste établi : `warn`. |
+| N4 | Marques | Swissreg (Suisse) et TMview (UE) : vérification manuelle à la relecture au début. |
+| N5 | Imitation | Titres, descriptions et noms contenant un nom d'artiste connu, « type beat », « in the style of », « (AI) » : `warn`. Voix clonée interdite (R6). |
+| N6 | Affichage | Badge « IA » visible à côté du nom ; le numéro de catalogue de l'artiste lève l'ambiguïté. |
+
+**Morceaux et doublons** (aujourd'hui : un même fichier ne peut pas être attaché deux fois **au même morceau** ; ISRC unique).
+
+| # | Contrôle | Détail |
+|---|---|---|
+| D1 | Même fichier, tout le catalogue | **Gain rapide, gratuit.** Étendre la comparaison de l'empreinte SHA-256 à tous les morceaux : `fail` (« ce fichier existe déjà sur Vynl »), sans dire chez qui. |
+| D2 | Même enregistrement ré-encodé ou coupé | Empreinte acoustique de **notre propre catalogue** : Chromaprint (libre) ou « custom bucket » d'un prestataire (ACRCloud propose le dédoublonnage de ses buckets). Chromaprint lit les deux premières minutes et semble sensible aux changements de tempo et de hauteur (déduit de sa conception : à tester). |
+| D3 | Enregistrements existants hors Vynl | Prestataire d'empreintes (ACRCloud, Audible Magic, Pex) : version identique, reprises et mélodie. Tarif ACRCloud visible seulement dans sa console (essai de 14 jours) : **pilote** avant de choisir (R5). |
+| D4 | Métadonnées | ISRC unique (en place) ; même titre et durée à ±2 s : `warn`. |
+| D5 | Détecteur « généré par IA » | Vérifie la déclaration `ai` et, si possible, l'outil. Un score « humain » élevé : `warn`. Probabilité, pas preuve. |
+| D6 | Preuve de création | Outil, formule, identifiant ou lien de la génération, pistes séparées si l'outil les fournit ; marquages de provenance (filigrane, C2PA) lus quand ils existent. Facultatif d'abord, requis ensuite. |
+| D7 | Nouveau contrôle périodique | Tout le catalogue est re-scanné à chaque mise à jour de la base de référence, au moins chaque mois. |
+| D8 | Journal des contrôles | Table `track_scans` : prestataire, version, score, référence trouvée, date, décision humaine. Ne jamais révéler à l'artiste qui détient le morceau qui ressemble. |
+
+Sources : documentation ACRCloud (bucket personnalisé, dédoublonnage, reprises) ; AcoustID et Chromaprint ;
+MusicBrainz (limite d'un appel par seconde, données de base en CC0, usage commercial du service public sous plan).
 
 ---
 
