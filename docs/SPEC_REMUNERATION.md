@@ -683,7 +683,7 @@ GEMA) : le risque de plagiat ou de reprise d'œuvres protégées est plus élev�
 | C3 | Contrôle avant publication | Empreinte (reconnaissance d'enregistrements connus), détecteur IA (vérifie la déclaration), nom d'artiste (déjà en place). Un morceau douteux reste en relecture. |
 | C4 | Signalement et retrait | Formulaire public pour les ayants droit, délai de réponse court, retrait journalisé, **liste de blocage** (empreintes des morceaux retirés) contre le ré-envoi, suspension des récidivistes. |
 | C5 | Retenue sur les virements | Première rémunération retenue quelques semaines ; sommes contestées gardées en attente ; reprise par écriture inverse (Q7). |
-| C6 | Étiquetage | Les morceaux IA sont signalés comme tels aux auditeurs (le règlement européen sur l'IA prévoit de la transparence : à vérifier). |
+| C6 | Étiquetage | Les morceaux IA sont signalés comme tels aux auditeurs. Le règlement européen sur l'IA (art. 50) impose le marquage lisible par machine d'abord aux **fournisseurs des générateurs** ; la portée pour une plateforme est à confirmer (15.6), l'étiquetage reste prudent. |
 
 ### 15.4 Décisions à prendre
 
@@ -691,7 +691,7 @@ GEMA) : le risque de plagiat ou de reprise d'œuvres protégées est plus élev�
 |---|---|---|
 | R1 | Quel catalogue exactement ? | **DÉCIDÉ (12 oct. 2026) : la bêta commence 100 % IA.** Les morceaux déclarés `hybrid` sont **mis en attente**, pas refusés (voir 15.5). **La provenance `human` est supprimée** (décision du 12 oct. 2026) : plus proposée, refusée par l'API. L'hybride exigera plus tard la confirmation que l'auteur n'a pas cédé ces œuvres à une société de gestion. |
 | R2 | Territoires au lancement | Suisse seule réduit le nombre de licences ; Suisse + UE (choix actuel) ajoute l'art. 17 et des sociétés étrangères. |
-| R3 | Licences | Avis d'un avocat PI, puis contact avec SUISA (et les sociétés étrangères si l'UE est visée) **avant** le lancement. |
+| R3 | Licences et avis juridique | Avis d'un avocat PI, puis contact avec SUISA (et les sociétés étrangères si l'UE est visée) **avant** le lancement. Questions à lui poser : voir 15.7. |
 | R4 | Retenue C5 | Durée à fixer (par exemple 30 à 60 jours) ; à écrire dans les conditions. |
 | R5 | Outil d'empreinte | Pilote sur un jeu de morceaux (connus, reprises, 100 % IA) avant de choisir et de payer. |
 | R6 | Voix clonées | Interdites ; à contrôler à la relecture. |
@@ -746,6 +746,54 @@ peuvent légitimement le partager : on réduit le risque d'**imitation** d'un ar
 
 Sources : documentation ACRCloud (bucket personnalisé, dédoublonnage, reprises) ; AcoustID et Chromaprint ;
 MusicBrainz (limite d'un appel par seconde, données de base en CC0, usage commercial du service public sous plan).
+
+### 15.6 Cadre légal : ce qui est permis, ce qui reste à respecter *(12 oct. 2026 — état des lois tel que trouvé, à valider par l'avocat)*
+
+**Point 1 — publier des artistes IA.** À ma connaissance, aucune loi suisse ou européenne n'interdit de publier de la
+musique générée par IA. La Suisse n'a pas de loi dédiée à l'IA ; des textes sont en préparation en 2026 (consultation
+attendue fin 2026 pour la convention du Conseil de l'Europe, adaptation de la loi sur le droit d'auteur par l'IPI) : le
+cadre peut bouger. **« Contrôler la copie et le plagiat » est nécessaire, pas suffisant :**
+
+- **Responsabilité de la plateforme** : elle ne disparaît pas parce qu'on contrôle (art. 17 de la directive 2019/790,
+  art. 39d LDA). Il faut en plus une autorisation ou la preuve de ses meilleurs efforts, un retrait rapide, le blocage
+  des ré-envois.
+- **Transparence IA** : l'art. 50 du règlement européen sur l'IA s'applique depuis le **2 août 2026** ; le marquage
+  lisible par machine pèse d'abord sur les fournisseurs de générateurs, avec un délai jusqu'au 2 décembre 2026 pour ceux
+  déjà sur le marché (les sources divergent sur le statut du texte de report : à vérifier). Portée pour Vynl : à confirmer.
+- **Droits de la personnalité** : une voix qui imite une personne réelle est à interdire (R6).
+- **Confusion avec un artiste existant ou une marque** (concurrence déloyale, droit des marques) : contrôles de noms (15.5).
+- **Conditions des outils IA** : certains réservent l'usage commercial aux formules payantes (déclarer outil et formule).
+- **Contrat artiste** : garanties, indemnisation, retenue (C1, C5).
+- Un morceau 100 % IA a peu ou pas de droit d'auteur : rien à licencier chez SUISA, mais rien d'exclusif à vendre non plus.
+
+**Point 2 — l'artiste hybride.** Mêmes obligations pour la plateforme, **risque plus élevé** : la part humaine (paroles,
+mélodie) est protégée. **« Être déjà passé par un distributeur » n'est pas le bon critère** : DistroKid, TuneCore et
+CD Baby sont en général **non exclusifs** (à vérifier dans leurs conditions) ; être déjà sur d'autres plateformes
+n'empêche pas de publier ici. Ce qui bloque vraiment :
+
+1. un **contrat exclusif** (label, distributeur exclusif, éditeur) sur l'enregistrement ;
+2. une **cession des œuvres à une société de gestion** (SUISA, GEMA…) : l'auteur ne peut pas les licencier lui-même ;
+3. **qui dépose** : un faux « artiste hybride » peut se faire passer pour un artiste connu. Si le morceau existe déjà
+   ailleurs, l'empreinte (D3) le signale ; ce n'est **pas** une raison de refuser mais de demander une **preuve de
+   titularité** : comptes d'artiste vérifiés, ISRC dont il détient le code, déclaration signée, vérification d'identité
+   Stripe avant tout paiement.
+
+On ne voit pas les contrats : on s'appuie sur des **déclarations** (pas d'exclusivité ; société de gestion oui ou non et
+laquelle), l'empreinte, la preuve de titularité, l'indemnisation et le retrait. D'où la décision R1 : **l'hybride reste en
+attente pendant la bêta**, et ne s'ouvrira qu'avec ces quatre contrôles (déclarations, empreinte, preuve de titularité,
+vérification d'identité).
+
+### 15.7 Questions à poser à l'avocat
+
+1. Quelle est la responsabilité de Vynl, service récent et petit, pour un catalogue indépendant 100 % IA (art. 17
+   directive 2019/790, art. 39d LDA) ? Le régime allégé s'applique-t-il ?
+2. Faut-il une licence SUISA, ou d'une autre société de gestion, pour des œuvres 100 % IA ? Pour des œuvres hybrides ?
+3. L'étiquetage IA (règlement européen sur l'IA, art. 50) est-il obligatoire pour une plateforme comme Vynl ?
+4. Les garanties, l'indemnisation et la retenue sur les virements des conditions artistes sont-elles valables en droit
+   suisse et européen ?
+5. Que doivent contenir la procédure de signalement et le blocage des ré-envois (délais, forme, journalisation) ?
+6. *(ajout)* Faut-il un représentant dans l'UE (RGPD art. 27) et une inscription auprès d'un organisme d'autorégulation
+   pour les virements via Stripe Connect (intermédiaire financier) ?
 
 ---
 
