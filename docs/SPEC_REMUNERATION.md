@@ -710,9 +710,12 @@ documentation ACRCloud et Pex. Les affirmations sur les fournisseurs viennent de
 (nouveaux signalements, bases de référence qui s'enrichissent chaque jour). Le risque résiduel est traité par C4
 (retrait et blocage des ré-envois), C5 (retenue), C1 (indemnisation), et éventuellement une assurance de responsabilité.
 
-**Règle de la bêta (décidée).** Seuls les morceaux déclarés `ai` se publient. `hybrid` est **enregistré
-mais en attente** : un contrôle bloquant « held » côté serveur (même mécanisme que `rejected`), levé par un réglage
-(`ACCEPTED_PROVENANCES`) le jour où l'on ouvre l'hybride. Le Studio l'explique clairement (« enregistré, pas encore
+**Règle de la bêta (décidée, mise en œuvre le 12 oct. 2026).** Seuls les morceaux déclarés `ai` se publient. `hybrid` est **enregistré
+mais en attente** : un contrôle bloquant « held » côté serveur (même mécanisme que `rejected`). Un morceau **sans déclaration** est
+aussi bloqué (avant, un simple avertissement : ce choix de la bêta 100 % IA remplace la décision du 11 oct. sur ce point). La liste
+`ACCEPTED_PROVENANCES = ["ai"]` est une **constante de code**, en deux endroits (API `lib/provenance.ts`, admin `lib/moderation.ts`),
+et non un réglage : l'ouverture de l'hybride est une décision juridique, elle passe par une modification relue et testée. L'API
+refuse l'envoi en relecture avec un message clair (409) ; l'admin reste la barrière avant la publication. Le Studio l'explique clairement (« enregistré, pas encore
 accepté pendant la bêta »). **`human` est supprimé** (12 oct. 2026) : le Studio ne le propose plus (formulaire de candidature
 et déclaration IA) et l'API le refuse avec un message explicite (`lib/provenance.ts`). La valeur reste dans l'énumération
 `provenance_type` de la base (Postgres ne retire pas une valeur d'énumération) et dans l'historique des déclarations
@@ -731,7 +734,8 @@ peuvent légitimement le partager : on réduit le risque d'**imitation** d'un ar
 | N5 | Imitation | Titres, descriptions et noms contenant un nom d'artiste connu, « type beat », « in the style of », « (AI) » : `warn`. Voix clonée interdite (R6). |
 | N6 | Affichage | Badge « IA » visible à côté du nom ; le numéro de catalogue de l'artiste lève l'ambiguïté. |
 
-**Morceaux et doublons** (aujourd'hui : un même fichier ne peut pas être attaché deux fois **au même morceau** ; ISRC unique).
+**Morceaux et doublons** (état au 12 oct. 2026 : D1 en place pour les copies **entre artistes** ; D8 en place ; N2 en place côté API et admin).
+Un même artiste peut réutiliser son propre fichier (un single puis l'album) : seul un fichier déjà envoyé par **un autre artiste** est refusé.
 
 | # | Contrôle | Détail |
 |---|---|---|
