@@ -536,6 +536,75 @@ préalable pour la publicité et les traceurs tiers). Détail et inventaire : `P
    `ad_revenue_reports`, `consents` ; coupures décidées par le serveur (section 6.4) ;
    relevés `kind = ads` ; comptes du journal pour la publicité ; passage de la bêta au niveau
    gratuit avec publicité (`entitlement` : `beta` → `free_ad_supported`).
+8. **Croissance et volumétrie** *(section 14)* : décisions S1 à S7 avant l'étape 4, puis les paliers
+   1 à 3 quand leur déclencheur est atteint.
 
 Les étapes 1 et 2 ne dépendent d'aucune réponse de la section 12. Les étapes 3 à 6 attendent
 Q1, Q2, Q4 et Q5 ; l'étape 7 attend Q11 à Q14.
+
+L'étape 8 (section 14, croissance et volumétrie) ne dépend d'aucune réponse de la section 12 ;
+ses points « à décider maintenant » sont à traiter **avant** l'étape 4, tant que `plays` est presque vide.
+
+---
+
+## 14. Croissance et volumétrie *(proposé, 12 oct. 2026)*
+
+Ordres de grandeur calculés sur le schéma réel, **pas des mesures**. Hypothèses : 30 % des
+utilisateurs actifs par jour, 15 écoutes par jour et par utilisateur actif, un battement toutes
+les 15 s (≈ 15 par écoute), 350 octets par écoute (ligne + index), 200 octets par battement
+(ligne + index), 5 Mo d'audio servis par écoute. À recalculer si l'une d'elles change.
+
+**Point de départ mesuré le 12 oct. 2026** (Supabase, bêta fermée) : 5 comptes, 53 écoutes,
+450 battements, 1 paiement ; la plus grosse table pèse 272 ko. Requête pour le refaire :
+`select relname, n_live_tup, pg_size_pretty(pg_total_relation_size(relid)) from pg_stat_user_tables order by pg_total_relation_size(relid) desc limit 10;`
+
+### 14.1 Ce que ça donne
+
+| Utilisateurs actifs / mois | Écoutes / jour | `plays` / an | Battements / jour | Battements (30 j) | Audio servi / mois |
+|---|---|---|---|---|---|
+| 10 000 | 45 000 | ~6 Go | 0,7 M | ~4 Go | ~7 To |
+| 100 000 | 450 000 | ~57 Go | 6,7 M | ~40 Go | ~70 To |
+| 1 million | 4,5 M | ~575 Go (1,6 milliard de lignes) | 67 M (~780 / s en moyenne) | ~400 Go | ~675 To |
+| 10 millions | 45 M | ~5,7 To | 675 M | ~4 To | ~7 Po |
+
+Les tables d'argent (`payments`, `stripe_events`, `consents`, journal d'audit) restent à quelques
+millions de lignes par an : le volume vient des écoutes et de l'audio, pas de l'argent.
+
+### 14.2 Ce qui cède en premier
+
+1. **Le trajet d'un battement** : chaque battement fait un appel à Supabase Auth, un contrôle du
+   statut du compte, une lecture, une mise à jour et une insertion. L'API et l'authentification
+   saturent vers 50 000 à 100 000 utilisateurs actifs, bien avant le disque.
+2. **Les statistiques et le calcul d'une période** : les fonctions `admin_stats_*` et le calcul
+   des parts parcourent `plays` avec des regroupements. Sur ~1,6 milliard de lignes par an, une
+   page Analytics prendrait des minutes.
+3. **Le trafic audio** : plus coûteux que la base. L'API sert aujourd'hui le fichier original de
+   l'artiste (jusqu'à 200 Mo, un WAV de 35 Mo pour un titre de 3 min 30).
+4. **La purge à 30 jours des battements** (P7) : encore ~400 Go en régime stable à 1 million.
+
+### 14.3 Paliers
+
+| Palier | Déclencheur | Actions |
+|---|---|---|
+| 0 | moins de 10 000 actifs | Planifier la purge, sauvegardes restaurables, surveiller la taille des tables. |
+| 1 | ~50 à 100 M de lignes dans `plays`, ou une page Analytics à plus de 2 s | Cumuls journaliers (artiste, titre, pays, appareil, formule), lus par l'admin et par le calcul des parts. `plays` découpée par mois. Battements gardés 7 jours. Jeton vérifié localement, statut du compte en cache court. Transcodage (AAC, plusieurs débits) et CDN. Réplica en lecture pour les traitements lourds. |
+| 2 | ~1 million d'actifs | État de l'écoute en cours dans un stockage rapide (Redis ou petite table), **une seule écriture dans l'historique à la fin de l'écoute**, battements groupés. Entrepôt analytique séparé. Archivage des vieilles écoutes en fichiers compressés. API sur plusieurs instances. |
+| 3 | 10 millions et plus | Plateforme de données dédiée, flux d'événements. |
+
+### 14.4 À décider maintenant (peu coûteux tant que la base est presque vide)
+
+| # | Sujet | Proposition |
+|---|---|---|
+| S1 | Écoute en cours / historique | Sortir la règle « un seul flux ouvert par compte » (index unique partiel sur `plays`) vers une petite table d'état : Postgres refuse un index unique sur une table découpée sans la clé de découpage. Condition pour pouvoir découper `plays` par mois. |
+| S2 | Table des battements | Clé `(play_id, seq)` à la place de l'uuid aléatoire (un index de moins, pas de gonflement). Durée de conservation à 7 jours plutôt que 30 (P7, à revoir avec Q10). |
+| S3 | Cumuls | Tables de cumuls journaliers créées avec le calcul des parts (étape 4) : l'admin et le calcul lisent les cumuls, jamais `plays` brut. Sans identifiant d'utilisateur quand c'est possible. |
+| S4 | Audio | Plan de transcodage et de CDN **avant** que les artistes envoient des fichiers lourds ; limites de taille et de type sur le bucket `track-audio` (aujourd'hui vérifiées seulement après l'envoi). |
+| S5 | Identifiants | Pour les nouvelles grosses tables, préférer un identifiant ordonné dans le temps (uuid v7 ou entier) à l'uuid aléatoire. |
+| S6 | Conservation par table | Tableau des durées, à valider avec le juriste (Q10). Proposition : écoutes brutes ~24 mois en base puis archivées, cumuls sans identifiant gardés sans limite, battements 7 jours, empreintes d'IP 30 jours, paiements / journal / relevés 10 ans (art. 958f CO), événements Stripe traités ~90 jours (relisibles chez Stripe), consentements tant que le compte existe puis durée de preuve à fixer. |
+| S7 | Suppression de compte | **Anonymiser, ne pas supprimer** : déjà le modèle (`purge.ts`), à garder, car supprimer des lignes d'une table de plusieurs milliards est trop coûteux. |
+
+### 14.5 Surveillance
+
+Relever tous les mois : taille et nombre de lignes de `plays` et `play_heartbeats`, durée de la
+page Analytics, battements par seconde (moyenne et pointe du soir), volume d'audio servi, coût
+par utilisateur actif. Passer au palier suivant quand un déclencheur de 14.3 est atteint, pas avant.
