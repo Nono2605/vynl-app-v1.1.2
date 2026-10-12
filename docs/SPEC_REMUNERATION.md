@@ -689,7 +689,7 @@ GEMA) : le risque de plagiat ou de reprise d'œuvres protégées est plus élev�
 
 | # | Question | Proposition |
 |---|---|---|
-| R1 | Quel catalogue exactement ? | **DÉCIDÉ (12 oct. 2026) : la bêta commence 100 % IA.** Les morceaux déclarés `hybrid` (et `human`, hors positionnement) sont **mis en attente**, pas refusés (voir 15.5). L'hybride exigera plus tard la confirmation que l'auteur n'a pas cédé ces œuvres à une société de gestion. |
+| R1 | Quel catalogue exactement ? | **DÉCIDÉ (12 oct. 2026) : la bêta commence 100 % IA.** Les morceaux déclarés `hybrid` sont **mis en attente**, pas refusés (voir 15.5). **La provenance `human` est supprimée** (décision du 12 oct. 2026) : plus proposée, refusée par l'API. L'hybride exigera plus tard la confirmation que l'auteur n'a pas cédé ces œuvres à une société de gestion. |
 | R2 | Territoires au lancement | Suisse seule réduit le nombre de licences ; Suisse + UE (choix actuel) ajoute l'art. 17 et des sociétés étrangères. |
 | R3 | Licences | Avis d'un avocat PI, puis contact avec SUISA (et les sociétés étrangères si l'UE est visée) **avant** le lancement. |
 | R4 | Retenue C5 | Durée à fixer (par exemple 30 à 60 jours) ; à écrire dans les conditions. |
@@ -710,10 +710,13 @@ documentation ACRCloud et Pex. Les affirmations sur les fournisseurs viennent de
 (nouveaux signalements, bases de référence qui s'enrichissent chaque jour). Le risque résiduel est traité par C4
 (retrait et blocage des ré-envois), C5 (retenue), C1 (indemnisation), et éventuellement une assurance de responsabilité.
 
-**Règle de la bêta (décidée).** Seuls les morceaux déclarés `ai` se publient. `hybrid` et `human` sont **enregistrés
+**Règle de la bêta (décidée).** Seuls les morceaux déclarés `ai` se publient. `hybrid` est **enregistré
 mais en attente** : un contrôle bloquant « held » côté serveur (même mécanisme que `rejected`), levé par un réglage
 (`ACCEPTED_PROVENANCES`) le jour où l'on ouvre l'hybride. Le Studio l'explique clairement (« enregistré, pas encore
-accepté pendant la bêta »). `human` n'est pas dans le positionnement : à confirmer.
+accepté pendant la bêta »). **`human` est supprimé** (12 oct. 2026) : le Studio ne le propose plus (formulaire de candidature
+et déclaration IA) et l'API le refuse avec un message explicite (`lib/provenance.ts`). La valeur reste dans l'énumération
+`provenance_type` de la base (Postgres ne retire pas une valeur d'énumération) et dans l'historique des déclarations
+(ajout seul) ; une ancienne déclaration `human` s'affiche avec une invitation à la refaire.
 
 **Noms d'artiste** (aujourd'hui : unicité interne sans accents, casse ni ponctuation ; mots réservés ; mélange de
 caractères latins et cyrilliques refusé). On ne peut pas prouver qu'un nom n'existe pas ailleurs, et plusieurs artistes
