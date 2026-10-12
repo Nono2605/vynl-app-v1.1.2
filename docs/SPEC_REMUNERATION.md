@@ -538,6 +538,12 @@ préalable pour la publicité et les traceurs tiers). Détail et inventaire : `P
    gratuit avec publicité (`entitlement` : `beta` → `free_ad_supported`).
 8. **Croissance et volumétrie** *(section 14)* : décisions S1 à S7 avant l'étape 4, puis les paliers
    1 à 3 quand leur déclencheur est atteint.
+9. **Droits d'auteur et contenu IA** *(section 15)* : avis juridique et contact avec SUISA, conditions
+   artistes, déclaration IA étendue, contrôle avant publication, retrait et blocage des ré-envois,
+   retenue sur les virements. **Obligatoire avant l'ouverture publique** ; l'avis juridique démarre
+   dès maintenant, en parallèle.
+10. **Conservation, suppression de compte et archive comptable** *(section 16)* : à construire avec
+   l'étape 8 de la liste ci-dessus.
 
 Les étapes 1 et 2 ne dépendent d'aucune réponse de la section 12. Les étapes 3 à 6 attendent
 Q1, Q2, Q4 et Q5 ; l'étape 7 attend Q11 à Q14.
@@ -608,3 +614,125 @@ millions de lignes par an : le volume vient des écoutes et de l'audio, pas de l
 Relever tous les mois : taille et nombre de lignes de `plays` et `play_heartbeats`, durée de la
 page Analytics, battements par seconde (moyenne et pointe du soir), volume d'audio servi, coût
 par utilisateur actif. Passer au palier suivant quand un déclencheur de 14.3 est atteint, pas avant.
+
+### 14.6 Hébergement cible et coûts *(12 oct. 2026, tarifs publics consultés ce jour)*
+
+- **Supabase** : Pro à partir de 25 $/mois (base 8 Go incluse, disque supplémentaire 0,125 $/Go ; stockage 100 Go
+  inclus, 0,0213 $/Go ; sortie 250 Go + 250 Go « en cache » inclus, puis 0,09 $/Go ou 0,03 $/Go en cache ;
+  envoi jusqu'à 500 Go par fichier ; sauvegardes 7 jours, restauration à la seconde près +100 $/mois). Le plan gratuit
+  limite la base à 500 Mo, la sortie à 5 Go, l'envoi à 50 Mo par fichier et n'a pas de sauvegardes. Disque jusqu'à 60 To,
+  serveur jusqu'à 64 cœurs. Un changement de disque : 4 par 24 h ; un import de plus de 1,5 fois la taille met la
+  base en lecture seule.
+- **Région** : Zurich (`eu-central-2`) ou Francfort (`eu-central-1`) ; la région d'un projet ne se change pas
+  (nouveau projet puis migrations). Choisir tant que la base ne contient que des comptes de test.
+- **Cible** : base et authentification sur Supabase (Zurich) ; API sur Render (Francfort, instance payante) ;
+  application sur Vercel ; copies de diffusion (AAC) sur Cloudflare R2 (0,015 $/Go/mois, sortie gratuite, 10 Go
+  offerts) derrière un CDN ; **originaux des artistes** dans un stockage objet suisse ou UE (Exoscale, Infomaniak) ;
+  archive comptable dans un stockage suisse. Pendant la bêta : tout reste sur Supabase.
+- **Coûts estimés par mois** (hypothèses de 14, Supabase Storage pour l'audio) : 10 000 actifs ≈ 25 à 50 $ de base
+  et 200 à 600 $ d'audio ; 100 000 ≈ 300 $ et 2 000 à 6 300 $ ; 1 million ≈ 1 000 à 2 500 $ et 20 000 à 60 000 $.
+  L'audio coûte 10 à 40 fois plus que la base : servir des AAC (≈ 5 Mo) plutôt que les originaux (jusqu'à 35 Mo).
+- Le code touche l'audio à une dizaine d'endroits (`track_files.storage_provider` existe déjà) ; l'accès à la base
+  passe par ~237 appels du client Supabase dans 25 fichiers : quitter Supabase pour la base serait un vrai chantier.
+
+---
+
+## 15. Droits d'auteur et contenu IA *(proposé, 12 oct. 2026 — à valider par un avocat en propriété intellectuelle)*
+
+**Positionnement** : catalogue d'artistes indépendants, de la musique générée par IA. C'est là que se concentrent les
+litiges (procès de maisons de disques contre les générateurs, jugement du tribunal de Munich contre Suno en faveur de la
+GEMA) : le risque de plagiat ou de reprise d'œuvres protégées est plus élevé qu'ailleurs.
+
+### 15.1 Constats (sources en bas de section)
+
+- **SUISA** gère les droits des auteurs, compositeurs et éditeurs en Suisse. Elle indique qu'une œuvre **entièrement
+  générée par IA ne peut pas être inscrite** chez elle, que ses membres s'engagent à ne pas l'inscrire, que les œuvres
+  hybrides (part humaine) sont examinées séparément, et qu'elle ne peut pas toujours dire si une œuvre est protégée.
+  Je n'ai **pas trouvé de tarif SUISA pour le streaming musical** (seulement les jeux vidéo) : à demander à SUISA.
+- **Une clause « l'artiste est responsable » ne suffit pas** à dégager la plateforme.
+  - *UE* (directive 2019/790, art. 17) : une plateforme qui donne accès à des œuvres envoyées par ses utilisateurs
+    effectue elle-même la communication au public ; elle doit obtenir une autorisation, ou prouver ses meilleurs efforts
+    (contacter les sociétés de gestion, empêcher l'accès aux œuvres signalées, retirer vite, empêcher le ré-envoi). Les
+    services récents et petits ont un régime allégé. La Commission considère le contact proactif avec les sociétés de
+    gestion comme un minimum.
+  - *Suisse* (art. 39d LDA, depuis le 1er avril 2020) : un hébergeur dont le service présente un risque particulier doit,
+    après signalement, empêcher qu'une œuvre soit remise à disposition (« stay down »), dans la mesure raisonnable. Pas
+    d'obligation générale de surveillance.
+  - La clause donne un **recours contre l'artiste** et prouve la bonne foi, rien de plus.
+- **Un service de reconnaissance « style Shazam »** (ACRCloud, Audible Magic, Pex) retrouve les enregistrements identiques
+  ou peu modifiés, et certains annoncent la détection de reprises par la mélodie. Il **ne détecte pas** de façon fiable un
+  morceau nouveau, généré par IA, qui ressemble à une œuvre protégée. Les détecteurs « généré par IA » donnent une
+  probabilité, pas une preuve. Pas de taux d'erreur publiés par les fournisseurs : à mesurer sur un jeu de test.
+
+### 15.2 Conséquence pour un catalogue 100 % IA
+
+- Pour un morceau **entièrement généré** : SUISA n'a rien à licencier, mais l'œuvre n'est probablement pas protégée non
+  plus (elle peut être copiée), et le risque vient des œuvres reproduites par le modèle.
+- Pour un morceau **hybride** (paroles, mélodie ou arrangement d'un humain) : protégé ; si l'auteur est membre d'une
+  société, il lui a cédé ses droits, **il ne peut pas les licencier lui-même** à Vynl. SUISA ne couvre que la Suisse ;
+  l'UE suppose d'autres sociétés. Voir R1 et R2.
+- Les conditions des outils IA diffèrent (certains réservent l'usage commercial aux formules payantes) : l'artiste doit
+  déclarer l'outil et la formule utilisés.
+
+### 15.3 Contrôles proposés (couches)
+
+| # | Contrôle | Détail |
+|---|---|---|
+| C1 | Conditions artistes | Garanties (droits sur le morceau, usage commercial autorisé par l'outil, pas d'œuvre protégée reproduite, pas de voix clonée d'une personne réelle), indemnisation, autorisation de retirer et de **retenir ou reprendre** les sommes. |
+| C2 | Déclaration IA étendue | Outil, version, formule, date, part humaine (paroles, mélodie, voix), « 100 % IA » ou « hybride ». S'appuie sur le modèle existant (`ai_declarations`, relecture admin). |
+| C3 | Contrôle avant publication | Empreinte (reconnaissance d'enregistrements connus), détecteur IA (vérifie la déclaration), nom d'artiste (déjà en place). Un morceau douteux reste en relecture. |
+| C4 | Signalement et retrait | Formulaire public pour les ayants droit, délai de réponse court, retrait journalisé, **liste de blocage** (empreintes des morceaux retirés) contre le ré-envoi, suspension des récidivistes. |
+| C5 | Retenue sur les virements | Première rémunération retenue quelques semaines ; sommes contestées gardées en attente ; reprise par écriture inverse (Q7). |
+| C6 | Étiquetage | Les morceaux IA sont signalés comme tels aux auditeurs (le règlement européen sur l'IA prévoit de la transparence : à vérifier). |
+
+### 15.4 Décisions à prendre
+
+| # | Question | Proposition |
+|---|---|---|
+| R1 | Quel catalogue exactement ? | **100 % IA** seulement au départ ; l'hybride exige la confirmation que l'auteur n'a pas cédé ces œuvres à une société de gestion. |
+| R2 | Territoires au lancement | Suisse seule réduit le nombre de licences ; Suisse + UE (choix actuel) ajoute l'art. 17 et des sociétés étrangères. |
+| R3 | Licences | Avis d'un avocat PI, puis contact avec SUISA (et les sociétés étrangères si l'UE est visée) **avant** le lancement. |
+| R4 | Retenue C5 | Durée à fixer (par exemple 30 à 60 jours) ; à écrire dans les conditions. |
+| R5 | Outil d'empreinte | Pilote sur un jeu de morceaux (connus, reprises, 100 % IA) avant de choisir et de payer. |
+| R6 | Voix clonées | Interdites ; à contrôler à la relecture. |
+
+Sources : SUISA, « Les chansons générées par IA et le droit d'auteur » (blog.suisa.ch) et communiqué de mars 2024 ;
+art. 39d LDA (fedlex) ; directive (UE) 2019/790 art. 17 et lignes directrices de la Commission (COM(2021) 288) ;
+documentation ACRCloud et Pex. Les affirmations sur les fournisseurs viennent de leur propre documentation.
+
+---
+
+## 16. Conservation, suppression de compte et archive comptable *(proposé, 12 oct. 2026 — à valider par une fiduciaire / un juriste)*
+
+**Principe** : la société tient **sa propre comptabilité 10 ans** (art. 958f CO, à compter de la fin de l'exercice),
+lisible et consultable à tout moment ; Stripe n'est pas une archive (si le compte est limité ou fermé, l'accès est
+perdu). Le lieu de conservation (hors Suisse) n'a pas pu être confirmé : à demander à la fiduciaire ; une copie en Suisse
+rend la question sans objet. Le KYC des créateurs est fait par Stripe ; faire valider qu'un virement via Stripe Connect
+ne fait pas de Vynl un intermédiaire financier.
+
+| Donnée | Après suppression du compte | Durée |
+|---|---|---|
+| E-mail, identité d'authentification, nom, avatar, playlists, bibliothèque, abonnements aux artistes | **Supprimés** | après le délai de grâce |
+| Empreinte d'IP, battements, appareil | **Supprimés** | 30 jours / 7 jours |
+| Écoutes brutes | **Anonymisées** (lien au compte retiré) | ~24 mois, puis cumuls sans identifiant |
+| Paiements, TVA, relevés de redevances, virements, écritures | **Gardés** | **10 ans** |
+| Identité légale de l'artiste, conditions acceptées | **Gardées** | 10 ans après le dernier paiement |
+| Pièces d'identité (KYC) | Chez Stripe, jamais chez nous | n/a |
+| Journal d'audit | Gardé | 2 ans (actions financières : 10 ans) |
+| Modération, déclarations IA, litiges de droits | Gardés | délai de prescription (à fixer) |
+| Consentements | Preuve gardée sans identité directe | à fixer |
+| Journaux techniques | Supprimés | 30 à 90 jours |
+
+**Archive comptable à construire** : export mensuel des factures et des mouvements Stripe, copie de `payments`, relevés
+de redevances et de virements, dans un stockage suisse, non modifiable, avec contrôle de lecture à intervalles réguliers.
+
+**Cookies** : aujourd'hui seulement la session et `vynl_policy` (nécessaires : pas de bandeau, mais à citer dans la
+politique). Les statistiques d'écoute sont mesurées par nos serveurs, sans cookie. Un bandeau n'est requis qu'avec la
+publicité ou un outil tiers : la Suisse exige l'information et un droit de refus (art. 45c LTC, lignes directrices du
+PFPDT révisées en octobre 2025), l'UE l'accord préalable ; on applique le plus strict. **Aucun outil de mesure tiers
+avant la publicité.**
+
+**Genre** : les morceaux n'ont aucun champ de genre aujourd'hui. Ajouter une liste fermée (une trentaine de valeurs,
+éventuellement un sous-genre, la langue et l'ambiance), obligatoire avant la relecture, puis une dimension « genre »
+dans les cumuls (14.4, S3). Les statistiques par genre et par pays restent agrégées. Google Ads (achat de publicité)
+ne fournit aucune donnée d'écoute : les écoutes de Vynl restent la seule base de calcul des parts.
