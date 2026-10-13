@@ -84,3 +84,27 @@ export async function savePrivacyChoices(
 
   return { message: "Your choices are saved." };
 }
+
+// Suppression du compte par son propriétaire. L'API refait toutes les vérifications (adresse e-mail,
+// compte administrateur…) et annule l'abonnement AVANT de supprimer ; en cas d'échec rien n'est supprimé et
+// on renvoie le message. Une fois supprimé, la session n'existe plus : on la ferme ici et on affiche une page
+// de confirmation publique.
+export async function deleteAccount(
+  _state: PrivacyFormState | undefined,
+  formData: FormData
+): Promise<PrivacyFormState> {
+  if (formData.get("understand") !== "on") return { error: "Please tick the box to confirm." };
+  const confirmEmail = String(formData.get("confirm_email") ?? "").trim();
+  if (!confirmEmail) return { error: "Type your email address to confirm." };
+
+  const token = await accessToken();
+  try {
+    await api.post<{ deleted: boolean }>("/me/delete", { confirm_email: confirmEmail }, { accessToken: token });
+  } catch (error) {
+    return { error: explain(error) };
+  }
+
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/account-deleted");
+}

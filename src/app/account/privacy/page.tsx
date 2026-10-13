@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { loadPrivacyState, policyVersion, privacyLinks } from "@/lib/privacy";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteAccountForm } from "./DeleteAccountForm";
 import { PrivacyChoicesForm } from "./PrivacyChoicesForm";
 
 // « Privacy & data » : ce que Vynl collecte, les choix de l'utilisateur et ses droits. Les
@@ -100,9 +101,35 @@ export default async function PrivacyPage() {
       </section>
 
       <section className="surface-calme" style={sectionStyle}>
+        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-sm)" }}>Download your data</h2>
+        <p style={muted}>
+          Get a copy of the data Vynl holds on your account: your profile, choices, library, playlists, follows, plan and payments,
+          listening history and, if you are an artist, what you published. It is a JSON file. Internal security data and what our
+          payment provider holds are not included.
+        </p>
+        <p style={{ marginTop: "var(--space-sm)" }}>
+          <a href="/account/privacy/export" className="btn btn-secondary" download>
+            Download my data
+          </a>
+        </p>
+      </section>
+
+      <section className="surface-calme" style={sectionStyle}>
+        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-sm)" }}>Delete your account</h2>
+        <p style={{ ...muted, marginBottom: "var(--space-sm)" }}>
+          This permanently deletes your account and your personal data: profile, library, playlists, follows and choices. If you have
+          a subscription, it ends immediately, with no refund for the current period. Your listening history stays, without any link to
+          you, because it is used to pay artists; payment records are kept for accounting, also without a link to you. If you are an
+          artist, your artist page is made anonymous and your tracks are removed from Vynl. This cannot be undone.
+        </p>
+        <DeleteAccountForm email={session.user.email ?? "your email"} />
+      </section>
+
+      <section className="surface-calme" style={sectionStyle}>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-sm)" }}>Your rights</h2>
         <p style={muted}>
-          You can ask to see, correct, export or delete the data we hold about you.{" "}
+          You can download your data and delete your account above. To correct something or ask any other question about your data,
+          get in touch.{" "}
           {links.contact ? (
             <>
               Write to{" "}
