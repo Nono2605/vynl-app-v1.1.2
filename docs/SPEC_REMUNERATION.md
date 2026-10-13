@@ -237,6 +237,27 @@ le lecteur et **validés par le serveur**.
   salée à rotation, type d'appareil, rythme d'écoute (nombre de lectures par heure).
 - Une lecture suspecte est **exclue** (`counted = false`, avec motif), jamais supprimée.
 
+**État au 13 oct. 2026 : détection mise en œuvre** (migration `20261014000005_fraud_detection.sql` du dépôt de l'API,
+fonction SQL `fraud_detect()`). Six règles examinent les écoutes jour par jour (jours UTC, journées complètes) et
+écrivent des **événements** (`fraud_events`, un seul par règle, jour et sujet) puis un **score par compte**
+(`fraud_scores` : faible 5, moyenne 15, haute 40, critique 80, plafonné à 100, événements ouverts des 30 derniers jours) :
+
+| Règle | Déclencheur |
+|---|---|
+| `round_the_clock` | 18 h validées ou plus dans la journée (22 h : haute) |
+| `track_repetition` | le même morceau 40 fois ou plus dans la journée (100 : moyenne, 300 : haute) |
+| `qualification_farming` | 50 écoutes ou plus qui s'arrêtent juste après les 30 s, morceaux de 90 s et plus, 80 % ou plus des écoutes du jour (150 : haute) |
+| `new_account_burst` | un morceau, 20 écoutes ou plus de 10 comptes ou plus, 80 % ou plus de comptes de moins de 7 jours (100 : haute) |
+| `shared_ip_fingerprint` | une empreinte d'IP du jour : 4 comptes ou plus, 40 écoutes ou plus, 60 % ou plus sur le même artiste (10 comptes : haute) |
+| `many_countries` | 4 pays ou plus dans la journée (7 : moyenne), à relire, jamais exclu d'un geste |
+
+**La détection signale, elle n'exclut rien** : un administrateur exclut les écoutes d'un événement (`fraud_exclude_event_plays`,
+motif obligatoire, refusé si la période de redevances est figée) ou les relit une à une. Les seuils sont provisoires,
+choisis pour ne signaler que ce qu'une personne a peu de raisons de faire ; on les règle (nouvelle migration) quand on aura
+de vraies données. Les règles qui lisent le pays, l'appareil ou l'empreinte d'IP ne voient rien sans le secret partagé
+(15.5 / étape 8) ; jamais de faux signal. Testée sur la chaîne complète des migrations avec des écoutes synthétiques
+(chaque règle, les cas normaux, l'idempotence, l'exclusion). **À planifier** par le propriétaire (pg_cron, quotidien) ;
+bouton « Run the detection » dans l'admin en attendant.
 ### 6.4 Publicité : le serveur décide quand elle est due *(décidé, D11 ; à construire après la bêta)*
 
 Pour un auditeur gratuit, une publicité toutes les 4 à 5 musiques (D9). Si le **client** décide
