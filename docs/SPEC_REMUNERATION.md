@@ -609,6 +609,23 @@ millions de lignes par an : le volume vient des écoutes et de l'audio, pas de l
 | S6 | Conservation par table | Tableau des durées, à valider avec le juriste (Q10). Proposition : écoutes brutes ~24 mois en base puis archivées, cumuls sans identifiant gardés sans limite, battements 7 jours, empreintes d'IP 30 jours, paiements / journal / relevés 10 ans (art. 958f CO), événements Stripe traités ~90 jours (relisibles chez Stripe), consentements tant que le compte existe puis durée de preuve à fixer. |
 | S7 | Suppression de compte | **Anonymiser, ne pas supprimer** : déjà le modèle (`purge.ts`), à garder, car supprimer des lignes d'une table de plusieurs milliards est trop coûteux. |
 
+**État de l'étape 8 au 13 oct. 2026**
+
+| # | État | Détail |
+|---|---|---|
+| S1 | **Reportée (décision révisée)** | Séparer l'écoute en cours de l'historique oblige à réécrire la règle de concurrence « une seule écoute ouverte par compte » (index unique partiel, avec la gestion des requêtes jumelles dans `POST /plays`), au cœur de l'écoute en production, pour un gain qui n'arrive qu'à plusieurs dizaines de millions de lignes. À faire au palier 1 (14.3), avec une table d'état `open_plays` et un découpage mensuel de `plays`. Les 53 écoutes d'aujourd'hui ne rendent pas la migration plus difficile plus tard. |
+| S2 | **Faite** | Migration `20261014000003_heartbeats_key_and_retention.sql` : clé `(play_id, seq)`, battements gardés 7 jours, purge des événements Stripe de plus de 90 jours. Purge à planifier par le propriétaire (instructions dans la migration). |
+| S3 | **Repoussée à l'étape 10** | Les cumuls journaliers se créent avec le calcul des parts, qui est leur premier lecteur. |
+| S4 | Plan écrit (14.6) | Limite de 200 Mo sur le bucket audio faite ; transcodage, R2 et CDN à l'étape 12. |
+| S5 | Appliquée | Les nouvelles grosses tables n'ont pas de clé uuid aléatoire (`play_heartbeats` : `(play_id, seq)`). |
+| S6 | Tableau en 16 | La purge des battements est prête, pas planifiée. |
+| S7 | **Vérifiée** | Suppression d'un compte rempli testée sur la chaîne complète des migrations (voir 16). |
+
+Aussi fait à l'étape 8 : genre à liste fermée (16, « Genre »), export et suppression de compte par l'utilisateur
+(`GET /me/export`, `POST /me/delete`, page « Privacy & data »), secret partagé app auditeur → API (le pays, l'appareil et
+l'IP déclarés ne sont crus que de notre app), registre des demandes (`privacy_requests`).
+Reste : fournisseur d'e-mails (choix à faire, voir le plan).
+
 ### 14.5 Surveillance
 
 Relever tous les mois : taille et nombre de lignes de `plays` et `play_heartbeats`, durée de la
@@ -822,8 +839,12 @@ ne fait pas de Vynl un intermédiaire financier.
 | Consentements | Preuve gardée sans identité directe | à fixer |
 | Journaux techniques | Supprimés | 30 à 90 jours |
 
-**Archive comptable à construire** : export mensuel des factures et des mouvements Stripe, copie de `payments`, relevés
-de redevances et de virements, dans un stockage suisse, non modifiable, avec contrôle de lecture à intervalles réguliers.
+**Archive comptable : légère, pas de système à construire** (décision du 13 oct. 2026). La société garde ses pièces
+10 ans, mais Stripe conserve les données des paiements et produit des rapports mensuels exportables en PDF ou CSV
+(rapport de solde, rapport de rapprochement des virements). Stripe n'est pourtant pas l'archive légale : une clôture
+de compte y est irréversible et on y perd la main, Stripe recommande d'exporter avant. Donc : un **export mensuel de ces
+deux rapports**, à la main au début, avec la fiduciaire, rangé dans le stockage de la société ; plus nos propres
+relevés (calcul des parts, virements aux artistes, TVA calculée, conditions acceptées), déjà non modifiables en base.
 
 **Cookies** : aujourd'hui seulement la session et `vynl_policy` (nécessaires : pas de bandeau, mais à citer dans la
 politique). Les statistiques d'écoute sont mesurées par nos serveurs, sans cookie. Un bandeau n'est requis qu'avec la
@@ -831,7 +852,16 @@ publicité ou un outil tiers : la Suisse exige l'information et un droit de refu
 PFPDT révisées en octobre 2025), l'UE l'accord préalable ; on applique le plus strict. **Aucun outil de mesure tiers
 avant la publicité.**
 
-**Genre** : les morceaux n'ont aucun champ de genre aujourd'hui. Ajouter une liste fermée (une trentaine de valeurs,
+**Suppression et export de compte (fait le 13 oct. 2026).** `POST /me/delete` : confirmée en tapant l'adresse e-mail ;
+un administrateur est refusé ; les abonnements Stripe actifs sont annulés D'ABORD (si cela échoue, rien n'est supprimé) ;
+puis l'utilisateur d'authentification est supprimé, ce qui efface le compte et ses données personnelles (profil,
+bibliothèque, playlists, abonnements aux artistes, consentements), détache l'historique d'écoute et les pièces comptables
+(`user_id` à null, elles restent) et anonymise les pages d'artiste (morceaux archivés, abonnés et entrées de
+bibliothèque liés retirés). Testé sur la chaîne complète des 21 migrations avec un compte rempli et un compte témoin
+(inchangé). `GET /me/export` : un fichier JSON des données du compte, sans les données de sécurité internes. Les deux
+demandes sont inscrites au registre `privacy_requests` (non modifiable). Pas de remboursement du temps restant d'un abonnement.
+
+**Genre (fait le 13 oct. 2026) :** les morceaux n'avaient aucun champ de genre. Ajouter une liste fermée (une trentaine de valeurs,
 éventuellement un sous-genre, la langue et l'ambiance), obligatoire avant la relecture, puis une dimension « genre »
 dans les cumuls (14.4, S3). Les statistiques par genre et par pays restent agrégées. Google Ads (achat de publicité)
 ne fournit aucune donnée d'écoute : les écoutes de Vynl restent la seule base de calcul des parts.
