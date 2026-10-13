@@ -25,6 +25,11 @@ async function request<T>(
   opts: ApiOptions = {}
 ): Promise<T> {
   const headers: Record<string, string> = { ...opts.headers };
+  // Secret partagé avec l'API (serveur uniquement : la variable n'a pas de préfixe NEXT_PUBLIC_, donc elle n'existe
+  // pas dans le navigateur). Il prouve que la requête vient de notre app, pour que l'API croie le pays, l'appareil
+  // et l'IP qu'on lui transmet (API/src/lib/webappAuth.ts).
+  const webappSecret = typeof window === "undefined" ? process.env.WEBAPP_SHARED_SECRET : undefined;
+  if (webappSecret) headers["x-vynl-webapp-secret"] = webappSecret;
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (opts.accessToken) headers["Authorization"] = `Bearer ${opts.accessToken}`;
 
