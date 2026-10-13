@@ -19,6 +19,7 @@ import {
   upcoming as upcomingOf,
   type Queue,
 } from "@/lib/player/queue";
+import { useMediaSession } from "@/lib/player/useMediaSession";
 import {
   readMuted,
   readShuffle,
@@ -342,7 +343,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const load = useCallback(
     async (
       track: PlayerTrack,
-      opts: { resumeAt?: number; autoplay?: boolean; refresh?: boolean; source?: PlaySource } = {}
+      opts: {
+        resumeAt?: number;
+        autoplay?: boolean;
+        refresh?: boolean;
+        source?: PlaySource;
+        /** Le morceau précédent est fini : on laisse l'<audio> tel quel jusqu'au nouveau morceau. */
+        keepSource?: boolean;
+      } = {}
     ) => {
       const audio = audioRef.current;
       if (!audio) return;
@@ -365,10 +373,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       fetchingIdRef.current = track.id;
 
       // Couper tout de suite l'ancien morceau : sans ça il reste audible
-      // pendant toute la récupération de l'URL (long si l'API est à froid).
-      audio.pause();
-      audio.removeAttribute("src");
-      audio.load();
+      // pendant toute la récupération de l'URL (long si l'API est à froid). Pas à
+      // l'enchaînement : le morceau est déjà fini, et vider l'<audio> pendant que
+      // l'URL du suivant arrive laisse un trou où un téléphone verrouillé peut
+      // décider que la lecture est terminée et reprendre la main.
+      if (!opts.keepSource) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      }
       setState({ ...initialState, track, isLoading: true, currentTime: resumeAt });
 
       let result: StartPlayResult;
@@ -428,11 +441,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // lecture d'origine (l'album, la playlist…) ; toujours posée, pour qu'un ajout manuel
   // ne laisse pas sa source au morceau d'après.
   const startFromQueue = useCallback(
-    (queue: Queue<PlayerTrack>) => {
+    (queue: Queue<PlayerTrack>, keepSource = false) => {
       const track = queue.current;
       if (!track) return;
       setQueue(queue);
-      void load(track, { source: track.source ?? contextSourceRef.current });
+      void load(track, { source: track.source ?? contextSourceRef.current, keepSource });
     },
     [load, setQueue]
   );
@@ -594,6 +607,25 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
   const upcoming = useMemo(() => upcomingOf(queueView), [queueView]);
 
+  // Écran verrouillé, centre de contrôle, écouteurs, touches média.
+  const mediaPlay = useCallback(() => {
+    if (audioRef.current?.paused) toggle();
+  }, [toggle]);
+  const mediaPause = useCallback(() => {
+    if (audioRef.current && !audioRef.current.paused) toggle();
+  }, [toggle]);
+  useMediaSession({
+    audioRef,
+    track: state.track,
+    isPlaying: state.isPlaying,
+    hasNext: hasNext(queueView),
+    onPlay: mediaPlay,
+    onPause: mediaPause,
+    onNext: next,
+    onPrevious: previous,
+    onSeek: seek,
+  });
+
   return (
     <PlayerContext.Provider
       value={{
@@ -673,7 +705,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           endPlay("ended", e.currentTarget.currentTime);
           // Enchaînement : le morceau suivant de la file démarre tout seul.
           const queue = advance(queueRef.current);
-          if (queue) startFromQueue(queue);
+          if (queue) startFromQueue(queue, true);
         }}
         onError={(e) => handleError(e.currentTarget)}
       />
