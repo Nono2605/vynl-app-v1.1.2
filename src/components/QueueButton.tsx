@@ -5,6 +5,7 @@ import { usePlayer } from "@/lib/player/PlayerContext";
 import { QueueIcon } from "@/components/icons";
 import { UpcomingList } from "@/components/UpcomingList";
 import { VinylCover } from "@/components/VinylCover";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
 
 // Petit bouton du lecteur qui ouvre une fenêtre avec les morceaux suivants : on y voit ce
 // qui va jouer, on peut sauter à un morceau, en retirer, ou tout vider. Se ferme avec
@@ -71,7 +72,10 @@ export function QueueButton() {
               </span>
               <span className="upcoming__text">
                 <span className="queue-pop__label">Now playing</span>
-                <span className="upcoming__name">{track.title}</span>
+                <span className="upcoming__name">
+                  {track.title}
+                  <ExplicitBadge explicit={track.explicit} />
+                </span>
                 <span className="upcoming__artist">{track.artistName}</span>
               </span>
             </div>

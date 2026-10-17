@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
 import type { AuthFormState } from "@/app/actions/auth";
+import { parseFavoriteGenres } from "@/lib/genres";
 
 export async function updateProfile(
   _state: AuthFormState | undefined,
@@ -68,10 +69,11 @@ export async function updatePreferences(
   formData: FormData
 ): Promise<AuthFormState> {
   const explicitContent = formData.get("explicit_content") === "on";
-  const favoriteGenres = String(formData.get("favorite_genres") ?? "")
-    .split(",")
-    .map((g) => g.trim())
-    .filter(Boolean);
+  // Cases cochées (liste fermée de l'API) ; le champ libre n'existe que si la liste n'a pas pu être chargée.
+  const favoriteGenres = parseFavoriteGenres(
+    formData.getAll("favorite_genres").map(String),
+    String(formData.get("favorite_genres_text") ?? "")
+  );
 
   const supabase = await createClient();
   const {

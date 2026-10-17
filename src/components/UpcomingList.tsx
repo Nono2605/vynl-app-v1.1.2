@@ -3,6 +3,7 @@
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { Icon } from "@/components/icons";
 import { VinylCover } from "@/components/VinylCover";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
 
 // Les morceaux à venir : cliquer sur l'un le joue tout de suite (les précédents sont
 // enjambés), la croix le retire de la file. Partagé par la fenêtre « Next up » du lecteur
@@ -35,7 +36,10 @@ export function UpcomingList({
                 <VinylCover src={item.coverUrl} small />
               </span>
               <span className="upcoming__text">
-                <span className="upcoming__name">{item.title}</span>
+                <span className="upcoming__name">
+                  {item.title}
+                  <ExplicitBadge explicit={item.explicit} />
+                </span>
                 <span className="upcoming__artist">{item.artistName}</span>
               </span>
             </button>

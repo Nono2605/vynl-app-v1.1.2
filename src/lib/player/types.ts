@@ -13,7 +13,8 @@ export interface PlaySource {
 
 export type HeartbeatState = "playing" | "paused" | "ended" | "closed";
 
-export type PlayFailure = "unauthenticated" | "not_found" | "unavailable";
+/** explicit_blocked : le morceau est explicite et l'auditeur a refusé ce contenu dans ses réglages. */
+export type PlayFailure = "unauthenticated" | "not_found" | "explicit_blocked" | "unavailable";
 
 export type StartPlayResult =
   | { ok: true; playId: string; url: string; format: string; heartbeatEverySeconds: number }

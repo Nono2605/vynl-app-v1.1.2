@@ -29,7 +29,9 @@ async function accessToken(): Promise<string | null> {
 function failure(err: unknown, fallback: string): string {
   if (err instanceof ApiError) {
     if (err.status === 401) return EXPIRED;
-    if (err.status === 404) return "That playlist isn't available anymore.";
+    if (err.status === 404) {
+      return err.message === "Track not found" ? "This track isn't available anymore." : "That playlist isn't available anymore.";
+    }
   }
   return fallback;
 }

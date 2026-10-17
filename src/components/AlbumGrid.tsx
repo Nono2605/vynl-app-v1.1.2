@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { VinylCover } from "@/components/VinylCover";
 import { albumTypeLabel } from "@/lib/albumType";
+import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
+import type { Provenance } from "@/lib/provenance";
 
 export interface Album {
   id: string;
@@ -10,6 +13,10 @@ export interface Album {
   /** Absents des anciennes réponses (bibliothèque) : la ligne « Album · 2026 » est alors omise. */
   type?: string;
   release_date?: string | null;
+  /** Provenance IA déclarée de l'album (« ai » si tous ses morceaux le sont) ; absente : pas de badge. */
+  provenance?: Provenance | null;
+  /** Au moins un morceau est explicite (badge « E »). */
+  explicit?: boolean;
 }
 
 // « Album · 2026 », « EP », « Single · 2025 »… selon ce que l'API a renvoyé.
@@ -42,13 +49,17 @@ export function AlbumGrid({ albums, emptyMessage }: { albums: Album[] | null; em
           <span data-tilt suppressHydrationWarning style={{ display: "block", marginBottom: "0.65rem" }}>
             <VinylCover src={album.cover_url} />
           </span>
-          <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{album.title}</p>
+          <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>
+            {album.title}
+            <ExplicitBadge explicit={album.explicit} />
+          </p>
           {album.artists && (
             <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>{album.artists.name}</p>
           )}
           {releaseLine(album) && (
             <p style={{ color: "var(--vynl-texte-3)", fontSize: "0.75rem" }}>{releaseLine(album)}</p>
           )}
+          <ProvenanceBadge provenance={album.provenance} className="card-badge" />
         </Link>
       ))}
     </div>

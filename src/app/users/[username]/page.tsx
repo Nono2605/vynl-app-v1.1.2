@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
@@ -66,9 +67,16 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             <span style={{ color: "var(--vynl-texte-2)" }}>
               <strong style={{ color: "var(--vynl-texte)" }}>{profile.followers_count}</strong> followers
             </span>
-            <span style={{ color: "var(--vynl-texte-2)" }}>
-              <strong style={{ color: "var(--vynl-texte)" }}>{profile.following_count}</strong> following
-            </span>
+            {/* « following » = les artistes et les utilisateurs suivis ; le détail des artistes est dans la bibliothèque. */}
+            {profile.is_owner ? (
+              <Link href="/library#following" className="text-link" style={{ color: "var(--vynl-texte-2)" }}>
+                <strong style={{ color: "var(--vynl-texte)" }}>{profile.following_count}</strong> following
+              </Link>
+            ) : (
+              <span style={{ color: "var(--vynl-texte-2)" }}>
+                <strong style={{ color: "var(--vynl-texte)" }}>{profile.following_count}</strong> following
+              </span>
+            )}
           </div>
         </div>
         {!profile.is_owner && (

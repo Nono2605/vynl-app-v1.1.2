@@ -14,6 +14,9 @@ export default function LoginPage() {
         <input type="email" name="email" placeholder="Email" aria-label="Email" required className="input-field" />
         <input type="password" name="password" placeholder="Password" aria-label="Password" required className="input-field" />
         {state?.error && <p style={{ color: "var(--vynl-erreur)" }}>{state.error}</p>}
+        <Link href="/forgot-password" className="text-link" style={{ alignSelf: "flex-start", fontSize: "0.875rem" }}>
+          Forgot your password?
+        </Link>
         <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? "Logging in…" : "Log in"}
         </button>

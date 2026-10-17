@@ -6,6 +6,8 @@ import { AlbumGrid } from "@/components/AlbumGrid";
 import { fetchAlbums } from "@/lib/albums";
 import { FollowButton } from "@/components/FollowButton";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
+import { getAllowExplicit } from "@/lib/listening";
+import { withExplicitFilter } from "@/lib/explicit";
 
 interface ArtistDetail {
   id: string;
@@ -29,9 +31,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
 
   const { slug } = await params;
 
+  const allowExplicit = await getAllowExplicit(session.access_token);
+
   let artist: ArtistDetail;
   try {
-    artist = await api.get<ArtistDetail>(`/artists/${slug}`);
+    artist = await api.get<ArtistDetail>(`/artists/${encodeURIComponent(slug)}${allowExplicit ? "" : "?explicit=false"}`);
   } catch {
     notFound();
   }
@@ -39,7 +43,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const [{ following }, savedTrackIds, albumsRes] = await Promise.all([
     api.get<{ following: boolean }>(`/me/follows/${artist.id}`, { accessToken: session.access_token }),
     getSavedTrackIds(session.access_token),
-    fetchAlbums(`artist_id=${artist.id}&limit=50`),
+    fetchAlbums(withExplicitFilter(`artist_id=${artist.id}&limit=50`, allowExplicit)),
   ]);
 
   const tracksWithArtist: Track[] = artist.tracks.map((t) => ({ ...t, artists: { name: artist.name } }));

@@ -1,10 +1,14 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
-/** Erreur HTTP de l'API : garde le code pour que l'appelant puisse distinguer 401 / 404 / 5xx. */
+/**
+ * Erreur HTTP de l'API : garde le statut pour que l'appelant puisse distinguer 401 / 404 / 5xx,
+ * et le `code` lisible par machine que certaines réponses ajoutent (ex. « explicit_blocked »).
+ */
 export class ApiError extends Error {
   constructor(
     message: string,
-    readonly status: number
+    readonly status: number,
+    readonly code?: string
   ) {
     super(message);
     this.name = "ApiError";
@@ -42,7 +46,11 @@ async function request<T>(
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ error: res.statusText }));
-    throw new ApiError(errorBody.error || `Request failed: ${res.status}`, res.status);
+    throw new ApiError(
+      errorBody.error || `Request failed: ${res.status}`,
+      res.status,
+      typeof errorBody.code === "string" ? errorBody.code : undefined
+    );
   }
 
   if (res.status === 204) return undefined as T;

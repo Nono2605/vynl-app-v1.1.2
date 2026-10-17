@@ -6,6 +6,8 @@ import { AlbumGrid } from "@/components/AlbumGrid";
 import { fetchAlbums } from "@/lib/albums";
 import { ArtistGrid, type Artist } from "@/components/ArtistGrid";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
+import { getAllowExplicit } from "@/lib/listening";
+import { withExplicitFilter } from "@/lib/explicit";
 
 export default async function SearchPage({
   searchParams,
@@ -24,12 +26,15 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
 
+  const allowExplicit = query ? await getAllowExplicit(session.access_token) : true;
+  const catalog = withExplicitFilter(`limit=24&q=${encodeURIComponent(query)}`, allowExplicit);
+
   const [results, savedTrackIds] = await Promise.all([
     query
       ? Promise.all([
-          api.get<{ data: Track[] }>(`/tracks?limit=24&q=${encodeURIComponent(query)}`),
+          api.get<{ data: Track[] }>(`/tracks?${catalog}`),
           api.get<{ data: Artist[] }>(`/artists?limit=24&q=${encodeURIComponent(query)}`),
-          fetchAlbums(`limit=24&q=${encodeURIComponent(query)}`),
+          fetchAlbums(catalog),
         ])
       : Promise.resolve(null),
     getSavedTrackIds(session.access_token),

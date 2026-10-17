@@ -5,6 +5,8 @@ import { usePlayer } from "@/lib/player/PlayerContext";
 import { Icon, PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
 import { Record } from "@/components/Record";
 import { SeekControl } from "@/components/SeekControl";
+import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
 import { ShuffleButton } from "@/components/ShuffleButton";
 import { UpcomingList } from "@/components/UpcomingList";
 import { VolumeControl } from "@/components/VolumeControl";
@@ -132,8 +134,10 @@ export function NowPlaying() {
         <p className="np__eyebrow">Now playing</p>
         <h2 id="np-title" className="np__title">
           {track.title}
+          <ExplicitBadge explicit={track.explicit} className="explicit-badge--lg" />
         </h2>
         <p className="np__artist">{track.artistName}</p>
+        <ProvenanceBadge provenance={track.provenance} size="md" className="np__badge" />
 
         <SeekControl className="np__seek" />
 

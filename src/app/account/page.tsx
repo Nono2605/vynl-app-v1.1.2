@@ -6,6 +6,7 @@ import { billingEnabled, formatPrice, type BillingPlan } from "@/lib/billing";
 import { PortalForm, SubscribeForm } from "./BillingButtons";
 import { PasswordForm } from "./PasswordForm";
 import { PreferencesForm } from "./PreferencesForm";
+import type { GenreOption } from "@/lib/genres";
 
 interface Me {
   email: string;
@@ -32,9 +33,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     redirect("/login");
   }
 
-  const [me, { subscription }] = await Promise.all([
+  const [me, { subscription }, genres] = await Promise.all([
     api.get<Me>("/me", { accessToken: session.access_token }),
     api.get<{ subscription: Subscription | null }>("/subscriptions/me", { accessToken: session.access_token }),
+    // La liste fermée des genres ; indisponible (503 avant la migration, API injoignable) : champ libre de secours.
+    api
+      .get<{ genres: GenreOption[] }>("/genres")
+      .then((result) => result.genres)
+      .catch((): GenreOption[] => []),
   ]);
 
   // Boutons d'achat : seulement si l'interrupteur BILLING_UI est « on ». Une API qui ne répond pas
@@ -65,6 +71,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <PreferencesForm
           explicitContent={me.profile?.explicit_content ?? true}
           favoriteGenres={me.profile?.favorite_genres ?? []}
+          genres={genres}
         />
       </section>
 

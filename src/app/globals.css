@@ -513,6 +513,7 @@ textarea {
 .badge {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
   padding: 0.3rem 0.75rem;
   border: 1px solid currentColor;
   border-radius: var(--vynl-rayon-badge);
@@ -522,6 +523,83 @@ textarea {
   line-height: 1.2;
   text-transform: uppercase;
 }
+/* Petite taille : sous un titre de carte ou à côté d'une ligne de liste. */
+.badge--sm {
+  padding: 0.12rem 0.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+}
+/* « E » : contenu explicite, à côté d'un titre. Contour fin, sans couleur d'alerte. */
+.explicit-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-left: 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: var(--vynl-texte-2);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: 0.1em;
+}
+
+.explicit-badge--lg {
+  width: 22px;
+  height: 22px;
+  margin-left: 0.6rem;
+  border-radius: 4px;
+  font-size: 13px;
+  vertical-align: 0.15em;
+}
+
+/* Genres favoris (réglages) : des pastilles à cocher. La case reste dans la page mais invisible ;
+   l'état coché et le focus clavier se lisent sur la pastille. */
+.genre-chips {
+  min-width: 0;
+  padding: 0;
+  border: none;
+}
+.genre-chips__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.genre-chip {
+  position: relative;
+  cursor: pointer;
+}
+.genre-chip input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.genre-chip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: 999px;
+  color: var(--vynl-texte-2);
+  font-size: 0.875rem;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+.genre-chip input:checked + span {
+  border-color: var(--vynl-cyan);
+  background: rgba(25, 227, 255, 0.12);
+  color: var(--vynl-texte);
+}
+.genre-chip input:focus-visible + span {
+  outline: 2px solid var(--vynl-cyan);
+  outline-offset: 2px;
+}
+
 .badge--assist {
   color: var(--vynl-azur-clair);
 }
@@ -2273,4 +2351,42 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Placement des badges de provenance IA selon l'endroit où ils sont posés. */
+.card-badge {
+  align-self: flex-start;
+  margin-top: 0.4rem;
+}
+.detail-badge {
+  margin-top: 0.6rem;
+}
+/* Ligne d'un morceau dans une liste (album, playlist) : numéro, lecture, titre, durée, cœur et menu.
+   Le titre prend la place qui reste (min-width: 0 : il passe à la ligne au lieu de pousser le reste
+   hors de l'écran) ; le badge de provenance se met SOUS le titre. */
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 0.65rem var(--space-sm);
+  border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--vynl-bordure);
+}
+.row-title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .track-row {
+    gap: 0.5rem;
+  }
+}
+.np__badge {
+  align-self: flex-start;
+  margin-top: 0.15rem;
 }

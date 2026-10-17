@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { sendHeartbeat, startPlay } from "@/app/actions/player";
 import type { HeartbeatState, PlayFailure, PlaySource, StartPlayResult } from "@/lib/player/types";
+import type { Provenance } from "@/lib/provenance";
 import {
   advance,
   clearUpcoming,
@@ -20,6 +21,8 @@ import {
   type Queue,
 } from "@/lib/player/queue";
 import { useMediaSession } from "@/lib/player/useMediaSession";
+import { shouldSkip, skipMessage } from "@/lib/player/skip";
+import { useToast } from "@/components/Toast";
 import {
   readMuted,
   readShuffle,
@@ -34,6 +37,10 @@ export interface PlayerTrack {
   title: string;
   artistName: string;
   coverUrl: string | null;
+  /** Provenance IA déclarée (badge de la platine) ; absente : pas de badge. */
+  provenance?: Provenance | null;
+  /** Contenu explicite (badge « E ») ; absent : non. */
+  explicit?: boolean;
   /** D'où vient ce morceau quand il a été ajouté à la main à la file (sinon celle de la lecture en cours). */
   source?: PlaySource;
 }
@@ -116,6 +123,7 @@ const initialState: PlayerState = {
 const PLAY_ERRORS: Record<PlayFailure, string> = {
   unauthenticated: "Your session has expired. Log in again to keep listening.",
   not_found: "This track isn't available.",
+  explicit_blocked: "Explicit content is turned off in your settings.",
   unavailable: "Couldn't reach the server. Press play to retry.",
 };
 
@@ -187,6 +195,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const beatEveryRef = useRef(15);
   /** Dernier état envoyé : évite de répéter « playing » à chaque fin de mise en mémoire tampon. */
   const beatStateRef = useRef<"playing" | "paused" | null>(null);
+  /** Morceaux sautés d'affilée parce qu'ils ne se lisent pas (retirés, explicites refusés) ; revient à 0 dès qu'un morceau démarre. */
+  const skipStreakRef = useRef(0);
+  /** Passe au morceau suivant de la file en le marquant « à sauter s'il ne se lit pas » ; faux en fin de file. */
+  const skipForwardRef = useRef<((keepSource: boolean) => boolean) | null>(null);
+  const toast = useToast();
   const sourceRef = useRef<PlaySource | undefined>(undefined);
   /** Source de la liste d'où vient la lecture (album, playlist…), pour les morceaux de la file. */
   const contextSourceRef = useRef<PlaySource | undefined>(undefined);
@@ -350,6 +363,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         source?: PlaySource;
         /** Le morceau précédent est fini : on laisse l'<audio> tel quel jusqu'au nouveau morceau. */
         keepSource?: boolean;
+        /** Arrivé ici par « suivant » ou l'enchaînement : si le morceau ne se lit pas, on passe au suivant. */
+        skipOnFailure?: boolean;
       } = {}
     ) => {
       const audio = audioRef.current;
@@ -393,10 +408,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (requestRef.current !== request) return; // un autre morceau a été choisi entre-temps
       fetchingIdRef.current = null;
       if (!result.ok) {
+        // Un morceau retiré du catalogue ou explicite (refusé) au milieu d'une playlist ne doit pas
+        // arrêter la musique : on passe au suivant, trois fois d'affilée au plus.
+        if (opts.skipOnFailure && shouldSkip(result.reason, skipStreakRef.current) && skipForwardRef.current?.(Boolean(opts.keepSource))) {
+          skipStreakRef.current++;
+          toast(skipMessage(track.title, result.reason));
+          return;
+        }
         fail(PLAY_ERRORS[result.reason]);
         return;
       }
 
+      skipStreakRef.current = 0;
       playIdRef.current = result.playId;
       seqRef.current = 0;
       beatStateRef.current = null;
@@ -433,7 +456,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       if (requestRef.current !== request) return;
       setState((s) => ({ ...s, isLoading: false }));
     },
-    [endPlay, fail]
+    [endPlay, fail, toast]
   );
 
   // Joue le morceau courant d'une file qu'on vient de faire avancer (suivant, précédent,
@@ -441,14 +464,26 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // lecture d'origine (l'album, la playlist…) ; toujours posée, pour qu'un ajout manuel
   // ne laisse pas sa source au morceau d'après.
   const startFromQueue = useCallback(
-    (queue: Queue<PlayerTrack>, keepSource = false) => {
+    (queue: Queue<PlayerTrack>, keepSource = false, skipOnFailure = false) => {
       const track = queue.current;
       if (!track) return;
       setQueue(queue);
-      void load(track, { source: track.source ?? contextSourceRef.current, keepSource });
+      void load(track, { source: track.source ?? contextSourceRef.current, keepSource, skipOnFailure });
     },
     [load, setQueue]
   );
+
+  useEffect(() => {
+    skipForwardRef.current = (keepSource) => {
+      const queue = advance(queueRef.current);
+      if (!queue) return false;
+      startFromQueue(queue, keepSource, true);
+      return true;
+    };
+    return () => {
+      skipForwardRef.current = null;
+    };
+  }, [startFromQueue]);
 
   const resume = useCallback(
     (audio: HTMLAudioElement) => {
@@ -465,6 +500,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const audio = audioRef.current;
       if (!audio) return;
       if (fetchingIdRef.current === track.id) return; // déjà en cours de chargement
+      skipStreakRef.current = 0; // un choix de l'utilisateur : la série de sauts repart de zéro
       setQueue(startQueue(queueRef.current, track, queue));
       contextSourceRef.current = source;
       // Même morceau, source valide ET lecture encore ouverte : on reprend. Sinon
@@ -510,8 +546,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     // Pendant un chargement on ignore : chaque démarrage ouvre une lecture côté
     // serveur, en enchaîner trois d'affilée en laisserait deux vides.
     if (fetchingIdRef.current) return;
+    skipStreakRef.current = 0; // un appui de l'utilisateur : la série de sauts repart de zéro
     const queue = advance(queueRef.current);
-    if (queue) startFromQueue(queue);
+    if (queue) startFromQueue(queue, false, true);
   }, [startFromQueue]);
 
   const previous = useCallback(() => {
@@ -705,7 +742,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           endPlay("ended", e.currentTarget.currentTime);
           // Enchaînement : le morceau suivant de la file démarre tout seul.
           const queue = advance(queueRef.current);
-          if (queue) startFromQueue(queue, true);
+          if (queue) startFromQueue(queue, true, true);
         }}
         onError={(e) => handleError(e.currentTarget)}
       />

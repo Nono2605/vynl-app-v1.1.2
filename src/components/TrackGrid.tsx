@@ -4,6 +4,9 @@ import { TrackMenu } from "@/components/TrackMenu";
 import type { PlaySource } from "@/lib/player/types";
 import { VinylCover } from "@/components/VinylCover";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
+import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
+import { toProvenance, type Provenance } from "@/lib/provenance";
 
 export interface Track {
   id: string;
@@ -11,6 +14,10 @@ export interface Track {
   duration_seconds: number | null;
   artists: { name: string } | null;
   albums: { cover_url: string | null } | null;
+  /** Provenance IA déclarée (« ai » ou « hybrid ») ; absente : pas de badge. */
+  provenance?: Provenance | null;
+  /** Contenu explicite (badge « E »). */
+  explicit?: boolean;
 }
 
 export function TrackGrid({
@@ -37,6 +44,8 @@ export function TrackGrid({
     title: track.title,
     artistName: track.artists?.name ?? "Unknown artist",
     coverUrl: track.albums?.cover_url ?? null,
+    provenance: toProvenance(track.provenance),
+    explicit: track.explicit === true,
   }));
 
   return (
@@ -74,10 +83,14 @@ export function TrackGrid({
               <TrackMenu track={queue[index]} source={source} />
             </div>
           </div>
-          <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>{track.title}</p>
+          <p style={{ fontWeight: 600, fontSize: "0.9375rem" }}>
+            {track.title}
+            <ExplicitBadge explicit={track.explicit} />
+          </p>
           <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>
             {track.artists?.name ?? "Unknown artist"}
           </p>
+          <ProvenanceBadge provenance={track.provenance} className="card-badge" />
         </article>
       ))}
     </div>

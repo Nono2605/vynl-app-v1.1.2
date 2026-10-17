@@ -6,6 +6,7 @@ import { Crate } from "@/components/Crate";
 import { HeroRecord } from "@/components/HeroRecord";
 import { PlayAllButton } from "@/components/PlayAllButton";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
+import { toProvenance } from "@/lib/provenance";
 
 // Un mot du titre du hero : il monte derrière un masque (voir .w dans globals.css).
 function Word({ d, children }: { d: number; children: React.ReactNode }) {
@@ -35,6 +36,8 @@ export function DiscoverView({
     title: track.title,
     artistName: track.artists?.name ?? "Unknown artist",
     coverUrl: track.albums?.cover_url ?? null,
+    provenance: toProvenance(track.provenance),
+    explicit: track.explicit === true,
   }));
 
   return (

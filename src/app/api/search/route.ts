@@ -4,6 +4,8 @@ import type { Track } from "@/components/TrackGrid";
 import type { Album } from "@/components/AlbumGrid";
 import type { Artist } from "@/components/ArtistGrid";
 import { MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, RESULTS_PER_KIND, type SearchResponse } from "@/lib/search";
+import { getAllowExplicit } from "@/lib/listening";
+import { withExplicitFilter } from "@/lib/explicit";
 
 // Recherche en direct de la barre du haut : les premiers morceaux, albums et artistes
 // qui correspondent. Le navigateur ne parle pas à l'API (elle n'accepte que ce
@@ -26,9 +28,10 @@ export async function GET(request: Request) {
   if (q.length < MIN_QUERY_LENGTH) return Response.json(empty, { headers: NO_STORE });
 
   const query = `limit=${RESULTS_PER_KIND}&q=${encodeURIComponent(q)}`;
+  const catalog = withExplicitFilter(query, await getAllowExplicit(session.access_token));
   const [tracks, albums, artists] = await Promise.allSettled([
-    api.get<{ data: Track[] }>(`/tracks?${query}`),
-    api.get<{ data: Album[] }>(`/albums?${query}`),
+    api.get<{ data: Track[] }>(`/tracks?${catalog}`),
+    api.get<{ data: Album[] }>(`/albums?${catalog}`),
     api.get<{ data: Artist[] }>(`/artists?${query}`),
   ]);
 

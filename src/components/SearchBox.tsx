@@ -6,11 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { usePlayer, type PlayerTrack } from "@/lib/player/PlayerContext";
 import { Icon, PlayIcon, SearchIcon, SpinnerIcon } from "@/components/icons";
 import { VinylCover } from "@/components/VinylCover";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
 import type { Track } from "@/components/TrackGrid";
 import type { Album } from "@/components/AlbumGrid";
 import type { Artist } from "@/components/ArtistGrid";
 import { albumTypeLabel } from "@/lib/albumType";
 import { splitMatch } from "@/lib/searchMatch";
+import { toProvenance } from "@/lib/provenance";
 import { MIN_QUERY_LENGTH, type SearchResponse } from "@/lib/search";
 
 const DEBOUNCE_MS = 250;
@@ -30,6 +32,8 @@ function toPlayerTrack(track: Track): PlayerTrack {
     title: track.title,
     artistName: track.artists?.name ?? "Unknown artist",
     coverUrl: track.albums?.cover_url ?? null,
+    provenance: toProvenance(track.provenance),
+    explicit: track.explicit === true,
   };
 }
 
@@ -236,6 +240,7 @@ export function SearchBox() {
                 <span className="search__text">
                   <span className="search__name">
                     <Marked text={item.track.title} query={trimmed} />
+                    <ExplicitBadge explicit={item.track.explicit} />
                   </span>
                   <span className="search__sub">{item.player.artistName}</span>
                 </span>
@@ -258,6 +263,7 @@ export function SearchBox() {
                 <span className="search__text">
                   <span className="search__name">
                     <Marked text={item.album.title} query={trimmed} />
+                    <ExplicitBadge explicit={item.album.explicit} />
                   </span>
                   <span className="search__sub">{sub}</span>
                 </span>

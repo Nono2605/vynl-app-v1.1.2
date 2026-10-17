@@ -6,6 +6,8 @@ import type { Artist } from "@/components/ArtistGrid";
 import { DiscoverView } from "@/components/DiscoverView";
 import { fetchAlbums } from "@/lib/albums";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
+import { getAllowExplicit } from "@/lib/listening";
+import { withExplicitFilter } from "@/lib/explicit";
 
 export default async function DiscoverPage() {
   const supabase = await createClient();
@@ -17,9 +19,12 @@ export default async function DiscoverPage() {
     redirect("/login");
   }
 
+  const allowExplicit = await getAllowExplicit(session.access_token);
+  const catalog = withExplicitFilter("limit=12", allowExplicit);
+
   const [albums, tracksRes, artistsRes, savedTrackIds] = await Promise.all([
-    fetchAlbums("limit=12"),
-    api.get<{ data: Track[] }>("/tracks?limit=12"),
+    fetchAlbums(catalog),
+    api.get<{ data: Track[] }>(`/tracks?${catalog}`),
     api.get<{ data: Artist[] }>("/artists?limit=12"),
     getSavedTrackIds(session.access_token),
   ]);

@@ -77,6 +77,7 @@ export async function startPlay(
     if (err instanceof ApiError) {
       if (err.status === 401) return { ok: false, reason: "unauthenticated" };
       if (err.status === 404) return { ok: false, reason: "not_found" };
+      if (err.status === 403 && err.code === "explicit_blocked") return { ok: false, reason: "explicit_blocked" };
     }
     return { ok: false, reason: "unavailable" };
   }

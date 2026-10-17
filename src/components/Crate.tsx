@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Album } from "@/components/AlbumGrid";
 import { albumTypeLabel } from "@/lib/albumType";
+import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
 
 // Rangée de disques à faire défiler (la « caisse » de vinyles du site vitrine) :
 // chaque sortie est un disque rond, un sur deux décalé vers le bas. Au survol, le
@@ -30,9 +32,13 @@ export function Crate({ albums, emptyMessage }: { albums: Album[] | null; emptyM
                   <img src={album.cover_url} alt="" loading="lazy" decoding="async" draggable={false} />
                 )}
               </span>
-              <span className="crate__title">{album.title}</span>
+              <span className="crate__title">
+                {album.title}
+                <ExplicitBadge explicit={album.explicit} />
+              </span>
               {album.artists && <span className="crate__artist">{album.artists.name}</span>}
               {kind && <span className="crate__kind">{kind}</span>}
+              <ProvenanceBadge provenance={album.provenance} className="card-badge" />
             </Link>
           </li>
         );

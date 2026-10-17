@@ -1,14 +1,24 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { api } from "@/lib/api";
 import { TrackGrid, type Track } from "@/components/TrackGrid";
 import { AlbumGrid, type Album } from "@/components/AlbumGrid";
-import { ArtistGrid, type Artist } from "@/components/ArtistGrid";
+import { ArtistGrid } from "@/components/ArtistGrid";
 import { PlaylistList, type PlaylistSummary } from "@/components/PlaylistList";
+import { fetchFollowedArtists, fetchLibrarySection, type Section } from "@/lib/library";
+import { LIBRARY_PAGE_SIZE } from "@/lib/libraryItems";
 
-interface LibraryRow {
-  item_type: "track" | "album" | "artist" | "playlist";
-  item: Track | Album | Artist | PlaylistSummary | null;
+const unavailable = (what: string) => (
+  <p style={{ color: "var(--vynl-texte-2)" }}>{what} couldn&apos;t be loaded right now. Try again in a moment.</p>
+);
+
+// Une page pleine : la bibliothèque contient probablement davantage, pas encore affiché ici.
+function MoreNote({ section }: { section: Section<unknown> }) {
+  if (!section.more) return null;
+  return (
+    <p style={{ color: "var(--vynl-texte-3)", fontSize: "0.8125rem", marginTop: "var(--space-sm)" }}>
+      Showing your {LIBRARY_PAGE_SIZE} latest. Older ones will be browsable soon.
+    </p>
+  );
 }
 
 export default async function LibraryPage() {
@@ -21,18 +31,14 @@ export default async function LibraryPage() {
     redirect("/login");
   }
 
-  const { data: rows } = await api.get<{ data: LibraryRow[] }>("/library", {
-    accessToken: session.access_token,
-  });
-
-  const byType = <T,>(type: LibraryRow["item_type"]) =>
-    rows.filter((r) => r.item_type === type && r.item).map((r) => r.item as T);
-
-  const tracks = byType<Track>("track");
-  const albums = byType<Album>("album");
-  const artists = byType<Artist>("artist");
-  const playlists = byType<PlaylistSummary>("playlist");
-  const savedTrackIds = new Set(tracks.map((t) => t.id));
+  const token = session.access_token;
+  const [tracks, albums, playlists, following] = await Promise.all([
+    fetchLibrarySection<Track>("track", token),
+    fetchLibrarySection<Album>("album", token),
+    fetchLibrarySection<PlaylistSummary>("playlist", token),
+    fetchFollowedArtists(token),
+  ]);
+  const savedTrackIds = new Set(tracks?.items.map((t) => t.id));
 
   return (
     <div style={{ padding: "var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
@@ -40,27 +46,55 @@ export default async function LibraryPage() {
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Tracks</h2>
-        <TrackGrid
-          tracks={tracks}
-          emptyMessage="No saved tracks yet."
-          savedTrackIds={savedTrackIds}
-          source={{ context: "library" }}
-        />
+        {tracks ? (
+          <>
+            <TrackGrid
+              tracks={tracks.items}
+              emptyMessage="No saved tracks yet."
+              savedTrackIds={savedTrackIds}
+              source={{ context: "library" }}
+            />
+            <MoreNote section={tracks} />
+          </>
+        ) : (
+          unavailable("Your saved tracks")
+        )}
       </section>
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Albums</h2>
-        <AlbumGrid albums={albums} emptyMessage="No saved albums yet." />
+        {albums ? (
+          <>
+            <AlbumGrid albums={albums.items} emptyMessage="No saved albums yet." />
+            <MoreNote section={albums} />
+          </>
+        ) : (
+          unavailable("Your saved albums")
+        )}
       </section>
 
-      <section>
-        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Artists</h2>
-        <ArtistGrid artists={artists} emptyMessage="No saved artists yet." />
+      <section id="following">
+        <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Following</h2>
+        {following ? (
+          <>
+            <ArtistGrid artists={following.items} emptyMessage="You're not following any artist yet. Use Follow on an artist page." />
+            <MoreNote section={following} />
+          </>
+        ) : (
+          unavailable("The artists you follow")
+        )}
       </section>
 
       <section>
         <h2 style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Playlists</h2>
-        <PlaylistList playlists={playlists} emptyMessage="No saved playlists yet." />
+        {playlists ? (
+          <>
+            <PlaylistList playlists={playlists.items} emptyMessage="No saved playlists yet." />
+            <MoreNote section={playlists} />
+          </>
+        ) : (
+          unavailable("Your saved playlists")
+        )}
       </section>
     </div>
   );

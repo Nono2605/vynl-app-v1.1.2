@@ -3,6 +3,7 @@
 import { usePlayer } from "@/lib/player/PlayerContext";
 import { PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
 import { Record } from "@/components/Record";
+import { ExplicitBadge } from "@/components/ExplicitBadge";
 import { SeekControl } from "@/components/SeekControl";
 import { ShuffleButton } from "@/components/ShuffleButton";
 import { QueueButton } from "@/components/QueueButton";
@@ -45,7 +46,10 @@ export function PlayerBar() {
             <Record small cover={track.coverUrl} label={track.title} progress={progress} playing={isPlaying} turn={9} />
           </span>
           <span style={{ minWidth: 0 }}>
-            <span style={titleStyle}>{track.title}</span>
+            <span style={titleRowStyle}>
+              <span style={titleStyle}>{track.title}</span>
+              <ExplicitBadge explicit={track.explicit} />
+            </span>
             <span style={artistStyle}>{track.artistName}</span>
           </span>
         </button>
@@ -105,8 +109,15 @@ export function PlayerBar() {
   );
 }
 
+const titleRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  minWidth: 0,
+};
+
 const titleStyle: React.CSSProperties = {
   display: "block",
+  minWidth: 0,
   fontWeight: 600,
   fontSize: "0.875rem",
   whiteSpace: "nowrap",

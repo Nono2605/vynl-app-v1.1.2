@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { api } from "@/lib/api";
+import { getAllowExplicit } from "@/lib/listening";
+import { withExplicitFilter } from "@/lib/explicit";
 
 async function accessToken() {
   const supabase = await createClient();
@@ -76,6 +78,9 @@ export async function searchTracksForPlaylist(
   const query = String(formData.get("q") ?? "").trim();
   if (!query) return { results: [], query };
 
-  const { data } = await api.get<{ data: SearchTrack[] }>(`/tracks?limit=10&q=${encodeURIComponent(query)}`);
+  const allowExplicit = await getAllowExplicit(await accessToken());
+  const { data } = await api.get<{ data: SearchTrack[] }>(
+    `/tracks?${withExplicitFilter(`limit=10&q=${encodeURIComponent(query)}`, allowExplicit)}`
+  );
   return { results: data, query };
 }
