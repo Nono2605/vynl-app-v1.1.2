@@ -16,6 +16,8 @@ interface ArtistDetail {
   avatar_url: string | null;
   banner_url: string | null;
   verified: boolean;
+  /** Nombre de followers (le nombre seulement, jamais qui) ; null si l'API n'a pas pu le lire. */
+  followers_count?: number | null;
   tracks: Omit<Track, "artists">[];
 }
 
@@ -81,7 +83,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
               </span>
             )}
           </h1>
-          <FollowButton artistId={artist.id} initialFollowing={following} />
+          <FollowButton artistId={artist.id} initialFollowing={following} followersCount={artist.followers_count ?? null} />
         </div>
         {artist.bio && (
           <p style={{ color: "var(--vynl-texte-2)", maxWidth: "60ch", marginTop: "var(--space-sm)" }}>
