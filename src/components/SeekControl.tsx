@@ -1,13 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { usePlayer } from "@/lib/player/PlayerContext";
+import { usePlayer, usePlayerProgress } from "@/lib/player/PlayerContext";
 import { formatDuration } from "@/lib/formatDuration";
 
 // Heure écoulée, curseur de position, durée. Partagé par le lecteur du bas et la
 // platine (« Now playing ») : la mise en page vient de la classe passée.
 export function SeekControl({ className }: { className?: string }) {
-  const { currentTime, duration, seek } = usePlayer();
+  const { seek } = usePlayer();
+  const { currentTime, duration } = usePlayerProgress();
 
   // Pendant un glissement du curseur on affiche la valeur du doigt, pas
   // currentTime (que timeupdate réécrit en continu et qui faisait sauter le

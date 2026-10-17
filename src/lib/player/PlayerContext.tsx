@@ -53,9 +53,18 @@ interface PlayerState {
   isLoading: boolean;
   /** L'<audio> attend des données (réseau lent, après un seek). */
   isBuffering: boolean;
+  error: string | null;
+}
+
+/**
+ * Où en est le morceau. Séparé du reste de l'état exprès : `timeupdate` arrive environ quatre fois par
+ * seconde, et tout composant qui lit `usePlayer()` (chaque bouton Lecture, chaque numéro de ligne, chaque
+ * menu « ⋯ » d'une liste) se redessinerait à chaque fois. Seuls ceux qui affichent la position la lisent
+ * ici, avec `usePlayerProgress()`.
+ */
+interface PlayerProgress {
   currentTime: number;
   duration: number;
-  error: string | null;
 }
 
 interface PlayerContextValue extends PlayerState {
@@ -103,10 +112,18 @@ interface PlayerContextValue extends PlayerState {
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
+const PlayerProgressContext = createContext<PlayerProgress | null>(null);
 
 export function usePlayer(): PlayerContextValue {
   const ctx = useContext(PlayerContext);
   if (!ctx) throw new Error("usePlayer must be used within PlayerProvider");
+  return ctx;
+}
+
+/** Temps écoulé et durée du morceau : change plusieurs fois par seconde, à ne lire que pour afficher la position. */
+export function usePlayerProgress(): PlayerProgress {
+  const ctx = useContext(PlayerProgressContext);
+  if (!ctx) throw new Error("usePlayerProgress must be used within PlayerProvider");
   return ctx;
 }
 
@@ -115,10 +132,10 @@ const initialState: PlayerState = {
   isPlaying: false,
   isLoading: false,
   isBuffering: false,
-  currentTime: 0,
-  duration: 0,
   error: null,
 };
+
+const initialProgress: PlayerProgress = { currentTime: 0, duration: 0 };
 
 const PLAY_ERRORS: Record<PlayFailure, string> = {
   unauthenticated: "Your session has expired. Log in again to keep listening.",
@@ -217,6 +234,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [muted, setMuted] = useState(readMuted);
 
   const [state, setState] = useState<PlayerState>(initialState);
+  const [progress, setProgress] = useState<PlayerProgress>(initialProgress);
 
   const setQueue = useCallback((queue: Queue<PlayerTrack>) => {
     queueRef.current = queue;
@@ -397,7 +415,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         audio.removeAttribute("src");
         audio.load();
       }
-      setState({ ...initialState, track, isLoading: true, currentTime: resumeAt });
+      setState({ ...initialState, track, isLoading: true });
+      setProgress({ currentTime: resumeAt, duration: 0 });
 
       let result: StartPlayResult;
       try {
@@ -537,7 +556,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       // émettre `timeupdate` avant `seeking`, avec déjà la nouvelle position.)
       if (playIdRef.current && beatStateRef.current === "playing") beat("playing", audio.currentTime);
       audio.currentTime = seconds;
-      setState((s) => ({ ...s, currentTime: seconds }));
+      setProgress((p) => ({ ...p, currentTime: seconds }));
     },
     [beat]
   );
@@ -608,6 +627,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audio.load();
     }
     setState(initialState);
+    setProgress(initialProgress);
   }, [endPlay, setQueue]);
 
   const handleError = useCallback(
@@ -651,11 +671,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const mediaPause = useCallback(() => {
     if (audioRef.current && !audioRef.current.paused) toggle();
   }, [toggle]);
+  const canNext = hasNext(queueView);
+  const canPrevious = hasPrevious(queueView);
   useMediaSession({
     audioRef,
     track: state.track,
     isPlaying: state.isPlaying,
-    hasNext: hasNext(queueView),
+    hasNext: canNext,
     onPlay: mediaPlay,
     onPause: mediaPause,
     onNext: next,
@@ -663,89 +685,132 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     onSeek: seek,
   });
 
+  // La valeur ne change que quand l'un de ses morceaux change : elle ne dépend PAS de la position (voir
+  // PlayerProgress), donc `timeupdate` ne redessine pas les boutons des listes.
+  const { track, isPlaying, isLoading, isBuffering, error } = state;
+  const shuffle = queueView.shuffled;
+  const value = useMemo<PlayerContextValue>(
+    () => ({
+      track,
+      isPlaying,
+      isLoading,
+      isBuffering,
+      error,
+      hasNext: canNext,
+      hasPrevious: canPrevious,
+      upcoming,
+      jumpTo,
+      removeUpcoming: removeFromUpcoming,
+      clearUpcoming: clearAllUpcoming,
+      enqueue,
+      shuffle,
+      toggleShuffle,
+      volume,
+      muted,
+      setVolume,
+      toggleMute,
+      nowPlayingOpen: nowPlayingOpen && track !== null,
+      openNowPlaying,
+      closeNowPlaying,
+      play,
+      toggle,
+      seek,
+      next,
+      previous,
+      stop,
+    }),
+    [
+      track,
+      isPlaying,
+      isLoading,
+      isBuffering,
+      error,
+      canNext,
+      canPrevious,
+      upcoming,
+      jumpTo,
+      removeFromUpcoming,
+      clearAllUpcoming,
+      enqueue,
+      shuffle,
+      toggleShuffle,
+      volume,
+      muted,
+      setVolume,
+      toggleMute,
+      nowPlayingOpen,
+      openNowPlaying,
+      closeNowPlaying,
+      play,
+      toggle,
+      seek,
+      next,
+      previous,
+      stop,
+    ]
+  );
+
   return (
-    <PlayerContext.Provider
-      value={{
-        ...state,
-        hasNext: hasNext(queueView),
-        hasPrevious: hasPrevious(queueView),
-        upcoming,
-        jumpTo,
-        removeUpcoming: removeFromUpcoming,
-        clearUpcoming: clearAllUpcoming,
-        enqueue,
-        shuffle: queueView.shuffled,
-        toggleShuffle,
-        volume,
-        muted,
-        setVolume,
-        toggleMute,
-        nowPlayingOpen: nowPlayingOpen && state.track !== null,
-        openNowPlaying,
-        closeNowPlaying,
-        play,
-        toggle,
-        seek,
-        next,
-        previous,
-        stop,
-      }}
-    >
-      {children}
-      <audio
-        ref={audioRef}
-        onPlay={() => {
-          playingRef.current = true;
-          setState((s) => ({ ...s, isPlaying: true, error: null }));
-        }}
-        onPause={() => {
-          playingRef.current = false;
-          setState((s) => ({ ...s, isPlaying: false, isBuffering: false }));
-          if (playIdRef.current && beatStateRef.current === "playing") {
-            stopBeatTimer();
-            beat("paused");
-          }
-        }}
-        onWaiting={() => setState((s) => ({ ...s, isBuffering: true }))}
-        onPlaying={() => {
-          setState((s) => ({ ...s, isBuffering: false }));
-          // Démarrage ou reprise réels : on pose la ligne de départ du chronométrage
-          // côté serveur. Une fin de mise en mémoire tampon ne renvoie rien.
-          if (playIdRef.current && beatStateRef.current !== "playing") {
-            beat("playing");
-            startBeatTimer();
-          }
-        }}
-        onCanPlay={() => setState((s) => ({ ...s, isBuffering: false }))}
-        // Fin d'un saut : on repart de la nouvelle position (le départ a été daté
-        // par seek(), avant le saut).
-        onSeeked={() => {
-          if (playIdRef.current && beatStateRef.current === "playing") beat("playing");
-        }}
-        // Lire currentTarget tout de suite : la fonction de mise à jour du
-        // state passée à setState s'exécute de façon différée, et React a
-        // déjà recyclé l'événement synthétique à ce moment-là (currentTarget
-        // devient null) — d'où le crash "Cannot read properties of null".
-        onTimeUpdate={(e) => {
-          const currentTime = e.currentTarget.currentTime;
-          setState((s) => ({ ...s, currentTime }));
-        }}
-        onDurationChange={(e) => {
-          // NaN sans source, Infinity pour un flux sans durée : on affiche --:--.
-          const duration = e.currentTarget.duration;
-          setState((s) => ({ ...s, duration: Number.isFinite(duration) ? duration : 0 }));
-        }}
-        onEnded={(e) => {
-          playingRef.current = false;
-          setState((s) => ({ ...s, isPlaying: false, currentTime: 0 }));
-          // Morceau terminé : la lecture se clôt. Réécouter ouvrira une nouvelle lecture.
-          endPlay("ended", e.currentTarget.currentTime);
-          // Enchaînement : le morceau suivant de la file démarre tout seul.
-          const queue = advance(queueRef.current);
-          if (queue) startFromQueue(queue, true, true);
-        }}
-        onError={(e) => handleError(e.currentTarget)}
-      />
+    <PlayerContext.Provider value={value}>
+      <PlayerProgressContext.Provider value={progress}>
+        {children}
+        <audio
+          ref={audioRef}
+          onPlay={() => {
+            playingRef.current = true;
+            setState((s) => ({ ...s, isPlaying: true, error: null }));
+          }}
+          onPause={() => {
+            playingRef.current = false;
+            setState((s) => ({ ...s, isPlaying: false, isBuffering: false }));
+            if (playIdRef.current && beatStateRef.current === "playing") {
+              stopBeatTimer();
+              beat("paused");
+            }
+          }}
+          onWaiting={() => setState((s) => ({ ...s, isBuffering: true }))}
+          onPlaying={() => {
+            setState((s) => ({ ...s, isBuffering: false }));
+            // Démarrage ou reprise réels : on pose la ligne de départ du chronométrage
+            // côté serveur. Une fin de mise en mémoire tampon ne renvoie rien.
+            if (playIdRef.current && beatStateRef.current !== "playing") {
+              beat("playing");
+              startBeatTimer();
+            }
+          }}
+          onCanPlay={() => setState((s) => ({ ...s, isBuffering: false }))}
+          // Fin d'un saut : on repart de la nouvelle position (le départ a été daté
+          // par seek(), avant le saut).
+          onSeeked={() => {
+            if (playIdRef.current && beatStateRef.current === "playing") beat("playing");
+          }}
+          // Lire currentTarget tout de suite : la fonction de mise à jour du
+          // state passée à setState s'exécute de façon différée, et React a
+          // déjà recyclé l'événement synthétique à ce moment-là (currentTarget
+          // devient null) — d'où le crash "Cannot read properties of null".
+          onTimeUpdate={(e) => {
+            const currentTime = e.currentTarget.currentTime;
+            setProgress((p) => (p.currentTime === currentTime ? p : { ...p, currentTime }));
+          }}
+          onDurationChange={(e) => {
+            // NaN sans source, Infinity pour un flux sans durée : on affiche --:--.
+            const duration = e.currentTarget.duration;
+            const known = Number.isFinite(duration) ? duration : 0;
+            setProgress((p) => (p.duration === known ? p : { ...p, duration: known }));
+          }}
+          onEnded={(e) => {
+            playingRef.current = false;
+            setState((s) => ({ ...s, isPlaying: false }));
+            setProgress((p) => ({ ...p, currentTime: 0 }));
+            // Morceau terminé : la lecture se clôt. Réécouter ouvrira une nouvelle lecture.
+            endPlay("ended", e.currentTarget.currentTime);
+            // Enchaînement : le morceau suivant de la file démarre tout seul.
+            const queue = advance(queueRef.current);
+            if (queue) startFromQueue(queue, true, true);
+          }}
+          onError={(e) => handleError(e.currentTarget)}
+        />
+      </PlayerProgressContext.Provider>
     </PlayerContext.Provider>
   );
 }

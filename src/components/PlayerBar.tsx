@@ -2,7 +2,7 @@
 
 import { usePlayer } from "@/lib/player/PlayerContext";
 import { PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
-import { Record } from "@/components/Record";
+import { PlayerRecord } from "@/components/PlayerRecord";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
 import { SeekControl } from "@/components/SeekControl";
 import { ShuffleButton } from "@/components/ShuffleButton";
@@ -19,8 +19,6 @@ export function PlayerBar() {
     isPlaying,
     isLoading,
     isBuffering,
-    currentTime,
-    duration,
     error,
     hasNext,
     toggle,
@@ -30,8 +28,6 @@ export function PlayerBar() {
   } = usePlayer();
 
   if (!track) return null;
-
-  const progress = duration ? Math.min(currentTime / duration, 1) : 0;
 
   return (
     <div role="region" aria-label="Player" className="player-bar">
@@ -43,7 +39,7 @@ export function PlayerBar() {
           aria-label={`Open now playing: ${track.title}, ${track.artistName}`}
         >
           <span className="player-bar__disc">
-            <Record small cover={track.coverUrl} label={track.title} progress={progress} playing={isPlaying} turn={9} />
+            <PlayerRecord small turn={9} />
           </span>
           <span style={{ minWidth: 0 }}>
             <span style={titleRowStyle}>

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePlayer } from "@/lib/player/PlayerContext";
 import { Icon, PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
-import { Record } from "@/components/Record";
+import { PlayerRecord } from "@/components/PlayerRecord";
 import { SeekControl } from "@/components/SeekControl";
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
@@ -26,8 +26,6 @@ export function NowPlaying() {
     isPlaying,
     isLoading,
     isBuffering,
-    currentTime,
-    duration,
     error,
     hasNext,
     toggle,
@@ -61,8 +59,6 @@ export function NowPlaying() {
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
   if (!nowPlayingOpen || !track) return null;
-
-  const progress = duration ? Math.min(currentTime / duration, 1) : 0;
 
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Escape") {
@@ -126,7 +122,7 @@ export function NowPlaying() {
 
       <div className="np__stage" onPointerMove={onPointerMove} onPointerLeave={onPointerLeave}>
         <div ref={tiltRef} className="np__disc">
-          <Record cover={track.coverUrl} label={track.title} progress={progress} playing={isPlaying} turn={11} />
+          <PlayerRecord turn={11} />
         </div>
       </div>
 
