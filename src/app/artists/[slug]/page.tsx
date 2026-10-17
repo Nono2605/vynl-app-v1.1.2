@@ -8,6 +8,8 @@ import { FollowButton } from "@/components/FollowButton";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
 import { getAllowExplicit } from "@/lib/listening";
 import { withExplicitFilter } from "@/lib/explicit";
+import { GenreChips } from "@/components/GenreChips";
+import type { GenreRef } from "@/lib/trackMeta";
 
 interface ArtistDetail {
   id: string;
@@ -18,6 +20,8 @@ interface ArtistDetail {
   verified: boolean;
   /** Nombre de followers (le nombre seulement, jamais qui) ; null si l'API n'a pas pu le lire. */
   followers_count?: number | null;
+  /** Les genres qui reviennent le plus parmi ses morceaux publiés. */
+  genres?: GenreRef[];
   tracks: Omit<Track, "artists">[];
 }
 
@@ -85,6 +89,11 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
           </h1>
           <FollowButton artistId={artist.id} initialFollowing={following} followersCount={artist.followers_count ?? null} />
         </div>
+        {(artist.genres?.length ?? 0) > 0 && (
+          <div style={{ marginTop: "var(--space-sm)" }}>
+            <GenreChips genres={artist.genres ?? []} />
+          </div>
+        )}
         {artist.bio && (
           <p style={{ color: "var(--vynl-texte-2)", maxWidth: "60ch", marginTop: "var(--space-sm)" }}>
             {artist.bio}

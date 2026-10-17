@@ -2390,3 +2390,39 @@ textarea {
   align-self: flex-start;
   margin-top: 0.15rem;
 }
+
+/* Genres et styles cliquables (page d'un album, d'un artiste, Découvrir, recherche) : un lien vers la recherche. */
+.chip-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.chip-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--vynl-bordure);
+  border-radius: 999px;
+  color: var(--vynl-texte-2);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+.chip-link:hover,
+.chip-link[aria-current="true"] {
+  border-color: var(--vynl-cyan);
+  background: rgba(25, 227, 255, 0.12);
+  color: var(--vynl-texte);
+}
+.chip-link:focus-visible {
+  outline: 2px solid var(--vynl-cyan);
+  outline-offset: 2px;
+}
+.chip-link--tag {
+  min-height: 30px;
+  font-size: 0.8125rem;
+}

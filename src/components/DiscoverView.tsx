@@ -7,6 +7,8 @@ import { HeroRecord } from "@/components/HeroRecord";
 import { PlayAllButton } from "@/components/PlayAllButton";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { toProvenance } from "@/lib/provenance";
+import { GenreChips } from "@/components/GenreChips";
+import { artistLine, type GenreRef } from "@/lib/trackMeta";
 
 // Un mot du titre du hero : il monte derrière un masque (voir .w dans globals.css).
 function Word({ d, children }: { d: number; children: React.ReactNode }) {
@@ -24,17 +26,20 @@ export function DiscoverView({
   tracks,
   artists,
   savedTrackIds,
+  genres = [],
 }: {
   albums: Album[] | null;
   tracks: Track[];
   artists: Artist[];
   savedTrackIds: Set<string>;
+  /** La liste des genres pour « Browse by genre » ; vide : la section n'est pas affichée. */
+  genres?: GenreRef[];
 }) {
   const latest = tracks[0] ?? null;
   const queue: PlayerTrack[] = tracks.map((track) => ({
     id: track.id,
     title: track.title,
-    artistName: track.artists?.name ?? "Unknown artist",
+    artistName: artistLine(track.artists?.name, track.credits),
     coverUrl: track.albums?.cover_url ?? null,
     provenance: toProvenance(track.provenance),
     explicit: track.explicit === true,
@@ -75,6 +80,13 @@ export function DiscoverView({
       </section>
 
       <div style={{ padding: "0 var(--space-lg) var(--space-lg)", display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
+        {genres.length > 0 && (
+          <section>
+            <h2 data-reveal suppressHydrationWarning style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>Browse by genre</h2>
+            <GenreChips genres={genres} label="Browse by genre" />
+          </section>
+        )}
+
         <section>
           <h2 data-reveal suppressHydrationWarning style={{ fontSize: "1.125rem", marginBottom: "var(--space-md)" }}>New releases</h2>
           <Crate albums={albums} emptyMessage="No releases published yet. Check back soon." />

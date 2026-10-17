@@ -7,8 +7,9 @@ import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
 import { toProvenance, type Provenance } from "@/lib/provenance";
+import { artistLine, type TrackMeta } from "@/lib/trackMeta";
 
-export interface Track {
+export interface Track extends TrackMeta {
   id: string;
   title: string;
   duration_seconds: number | null;
@@ -42,7 +43,7 @@ export function TrackGrid({
   const queue: PlayerTrack[] = tracks.map((track) => ({
     id: track.id,
     title: track.title,
-    artistName: track.artists?.name ?? "Unknown artist",
+    artistName: artistLine(track.artists?.name, track.credits),
     coverUrl: track.albums?.cover_url ?? null,
     provenance: toProvenance(track.provenance),
     explicit: track.explicit === true,
@@ -88,7 +89,7 @@ export function TrackGrid({
             <ExplicitBadge explicit={track.explicit} />
           </p>
           <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.8125rem" }}>
-            {track.artists?.name ?? "Unknown artist"}
+            {artistLine(track.artists?.name, track.credits)}
           </p>
           <ProvenanceBadge provenance={track.provenance} className="card-badge" />
         </article>

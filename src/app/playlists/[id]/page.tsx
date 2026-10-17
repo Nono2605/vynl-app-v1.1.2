@@ -10,13 +10,14 @@ import { TrackActions } from "@/components/TrackActions";
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
 import { toProvenance, type Provenance } from "@/lib/provenance";
+import { artistLine, type TrackMeta } from "@/lib/trackMeta";
 import { getSavedTrackIds } from "@/lib/savedTrackIds";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 import { PlaylistVisibilityToggle } from "@/components/PlaylistVisibilityToggle";
 import { SaveButton } from "@/components/SaveButton";
 import { AddTrackSearch } from "./AddTrackSearch";
 
-interface PlaylistTrack {
+interface PlaylistTrack extends TrackMeta {
   id: string;
   title: string;
   duration_seconds: number | null;
@@ -72,7 +73,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
   const queue: PlayerTrack[] = playlist.tracks.map((t) => ({
     id: t.id,
     title: t.title,
-    artistName: t.artists?.name ?? "Unknown artist",
+    artistName: artistLine(t.artists?.name, t.credits),
     coverUrl: t.albums?.cover_url ?? null,
     provenance: toProvenance(t.provenance),
     explicit: t.explicit === true,
@@ -134,7 +135,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                   <span>
                     {track.title}
                     <ExplicitBadge explicit={track.explicit} />{" "}
-                    <span style={{ color: "var(--vynl-texte-2)" }}>· {track.artists?.name ?? "Unknown"}</span>
+                    <span style={{ color: "var(--vynl-texte-2)" }}>· {track.artists?.name ? artistLine(track.artists.name, track.credits) : "Unknown"}</span>
                   </span>
                   <ProvenanceBadge provenance={track.provenance} />
                 </span>

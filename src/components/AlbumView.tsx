@@ -9,9 +9,12 @@ import { TrackActions } from "@/components/TrackActions";
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
 import { toProvenance, type Provenance } from "@/lib/provenance";
+import { CreditLine } from "@/components/CreditLine";
+import { GenreChips, TagChips } from "@/components/GenreChips";
+import { artistLine, topTags, type GenreRef, type TrackMeta } from "@/lib/trackMeta";
 import type { PlayerTrack } from "@/lib/player/PlayerContext";
 
-export interface AlbumTrack {
+export interface AlbumTrack extends TrackMeta {
   id: string;
   title: string;
   duration_seconds: number | null;
@@ -31,6 +34,11 @@ export interface AlbumDetail {
   provenance?: Provenance | null;
   /** Au moins un morceau est explicite (badge « E » à côté du titre). */
   explicit?: boolean;
+  /** Les genres qui reviennent le plus parmi les morceaux. */
+  genres?: GenreRef[];
+  label?: string | null;
+  copyright_line?: string | null;
+  description?: string | null;
   tracks: AlbumTrack[];
 }
 
@@ -63,12 +71,14 @@ export function AlbumView({
   const queue: PlayerTrack[] = album.tracks.map((t) => ({
     id: t.id,
     title: t.title,
-    artistName: album.artists?.name ?? "Unknown artist",
+    artistName: artistLine(album.artists?.name, t.credits),
     coverUrl: album.cover_url,
     provenance: toProvenance(t.provenance),
     explicit: t.explicit === true,
   }));
   const albumProvenance = toProvenance(album.provenance);
+  const tags = topTags(album.tracks);
+  const footer = [album.label, album.copyright_line].filter(Boolean).join(" · ");
   const summary = [
     releaseDate,
     `${album.tracks.length} ${album.tracks.length === 1 ? "track" : "tracks"}`,
@@ -107,12 +117,24 @@ export function AlbumView({
           )}
           <ProvenanceBadge provenance={albumProvenance} size="md" className="detail-badge" />
           <p style={{ color: "var(--vynl-texte-2)", fontSize: "0.875rem", marginTop: "0.25rem" }}>{summary}</p>
+          {(album.genres?.length ?? 0) > 0 || tags.length > 0 ? (
+            <div style={{ marginTop: "var(--space-sm)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <GenreChips genres={album.genres ?? []} />
+              <TagChips tags={tags} />
+            </div>
+          ) : null}
           <div style={{ marginTop: "var(--space-sm)", display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
             <PlayAllButton tracks={queue} source={{ context: "album", id: album.id }} />
             <SaveButton itemType="album" itemId={album.id} initialSaved={saved} size={28} />
           </div>
         </div>
       </div>
+
+      {album.description && (
+        <p style={{ color: "var(--vynl-texte-2)", maxWidth: "65ch", marginBottom: "var(--space-lg)", whiteSpace: "pre-line" }}>
+          {album.description}
+        </p>
+      )}
 
       <section>
         {album.tracks.length === 0 ? (
@@ -142,6 +164,7 @@ export function AlbumView({
                   {toProvenance(track.provenance) !== albumProvenance && (
                     <ProvenanceBadge provenance={track.provenance} />
                   )}
+                  <CreditLine credits={track.credits} />
                 </span>
                 <span style={{ color: "var(--vynl-texte-3)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                   {formatDuration(track.duration_seconds)}
@@ -156,6 +179,8 @@ export function AlbumView({
           </ol>
         )}
       </section>
+
+      {footer && <p style={{ color: "var(--vynl-texte-3)", fontSize: "0.8125rem", marginTop: "var(--space-lg)" }}>{footer}</p>}
     </div>
   );
 }

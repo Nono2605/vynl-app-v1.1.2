@@ -12,6 +12,7 @@ import type { Album } from "@/components/AlbumGrid";
 import type { Artist } from "@/components/ArtistGrid";
 import { albumTypeLabel } from "@/lib/albumType";
 import { splitMatch } from "@/lib/searchMatch";
+import { artistLine } from "@/lib/trackMeta";
 import { toProvenance } from "@/lib/provenance";
 import { MIN_QUERY_LENGTH, type SearchResponse } from "@/lib/search";
 
@@ -30,7 +31,7 @@ function toPlayerTrack(track: Track): PlayerTrack {
   return {
     id: track.id,
     title: track.title,
-    artistName: track.artists?.name ?? "Unknown artist",
+    artistName: artistLine(track.artists?.name, track.credits),
     coverUrl: track.albums?.cover_url ?? null,
     provenance: toProvenance(track.provenance),
     explicit: track.explicit === true,
