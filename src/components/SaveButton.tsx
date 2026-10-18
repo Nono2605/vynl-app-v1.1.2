@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveToLibrary, removeFromLibrary } from "@/app/actions/library";
 import { HeartIcon } from "@/components/icons";
-import { formatCount, likesLabel } from "@/lib/formatCount";
+import { formatLikes, likesLabel } from "@/lib/formatLikes";
 
 export function SaveButton({
   itemType,
@@ -65,7 +65,7 @@ export function SaveButton({
       }}
     >
       <HeartIcon size={size} filled={saved} />
-      {likes ? <span className="like-count like-count--btn">{formatCount(likes)}</span> : null}
+      {likes ? <span className="like-count like-count--btn">{formatLikes(likes)}</span> : null}
     </button>
   );
 }
