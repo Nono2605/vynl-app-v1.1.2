@@ -19,6 +19,8 @@ export interface Track extends TrackMeta {
   provenance?: Provenance | null;
   /** Contenu explicite (badge « E »). */
   explicit?: boolean;
+  /** Nombre de « j'aime » (bibliothèques d'auditeurs qui contiennent le morceau). */
+  likes_count?: number;
 }
 
 export function TrackGrid({
@@ -79,7 +81,12 @@ export function TrackGrid({
             </div>
             <div className="card-actions">
               {savedTrackIds && (
-                <SaveButton itemType="track" itemId={track.id} initialSaved={savedTrackIds.has(track.id)} />
+                <SaveButton
+                  itemType="track"
+                  itemId={track.id}
+                  initialSaved={savedTrackIds.has(track.id)}
+                  likesCount={track.likes_count ?? null}
+                />
               )}
               <TrackMenu track={queue[index]} source={source} />
             </div>

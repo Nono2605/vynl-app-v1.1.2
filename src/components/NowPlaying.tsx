@@ -2,14 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { usePlayer } from "@/lib/player/PlayerContext";
-import { Icon, PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
+import { HeartIcon, Icon, PlayIcon, PauseIcon, SpinnerIcon, SkipNextIcon, SkipPreviousIcon } from "@/components/icons";
 import { PlayerRecord } from "@/components/PlayerRecord";
 import { SeekControl } from "@/components/SeekControl";
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
+import { SaveButton } from "@/components/SaveButton";
+import { FollowButton } from "@/components/FollowButton";
+import { TrackMenu } from "@/components/TrackMenu";
 import { ShuffleButton } from "@/components/ShuffleButton";
 import { UpcomingList } from "@/components/UpcomingList";
 import { VolumeControl } from "@/components/VolumeControl";
+import { useTrackContext } from "@/lib/player/useTrackContext";
 
 const MAX_UPCOMING = 8;
 const FOCUSABLE = 'button:not(:disabled), [href], input:not(:disabled), [tabindex]:not([tabindex="-1"])';
@@ -41,6 +45,8 @@ export function NowPlaying() {
   const closeRef = useRef<HTMLButtonElement>(null);
   const tiltRef = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
+  // L'artiste et l'état de l'auditeur (déjà aimé, déjà suivi) : de quoi proposer « j'aime » et « suivre ».
+  const trackContext = useTrackContext(track?.id ?? null, nowPlayingOpen);
 
   // Ouverture : le focus entre dans la boîte, la page dessous ne défile plus ;
   // à la fermeture, tout revient où c'était.
@@ -127,12 +133,47 @@ export function NowPlaying() {
       </div>
 
       <div className="np__info">
-        <p className="np__eyebrow">Now playing</p>
+        <div className="np__top">
+          <p className="np__eyebrow">Now playing</p>
+          <div className="np__actions">
+            {trackContext.status === "ready" ? (
+              <SaveButton
+                key={`${track.id}:${trackContext.version}`}
+                itemType="track"
+                itemId={track.id}
+                initialSaved={trackContext.context.saved}
+                likesCount={trackContext.context.likes_count}
+                size={24}
+                className="np__action np__action--wide"
+              />
+            ) : (
+              <span className="np__action np__action--ghost" aria-hidden="true">
+                <HeartIcon size={24} />
+              </span>
+            )}
+            <TrackMenu track={track} variant="playlist" triggerClassName="np__action" />
+          </div>
+        </div>
         <h2 id="np-title" className="np__title">
           {track.title}
           <ExplicitBadge explicit={track.explicit} className="explicit-badge--lg" />
         </h2>
-        <p className="np__artist">{track.artistName}</p>
+        <div className="np__artist-row">
+          <p className="np__artist">{track.artistName}</p>
+          {trackContext.status === "ready" && trackContext.context.artist && (
+            <FollowButton
+              key={`${trackContext.context.artist.id}:${trackContext.version}`}
+              artistId={trackContext.context.artist.id}
+              initialFollowing={trackContext.context.following}
+              compact
+            />
+          )}
+          {trackContext.status === "error" && (
+            <button type="button" className="btn-plain np__retry" onClick={trackContext.retry}>
+              Like and follow unavailable. Retry
+            </button>
+          )}
+        </div>
         <ProvenanceBadge provenance={track.provenance} size="md" className="np__badge" />
 
         <SeekControl className="np__seek" />

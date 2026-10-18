@@ -21,6 +21,7 @@ export interface AlbumTrack extends TrackMeta {
   track_number: number | null;
   provenance?: Provenance | null;
   explicit?: boolean;
+  likes_count?: number;
 }
 
 export interface AlbumDetail {
@@ -173,6 +174,7 @@ export function AlbumView({
                   track={queue[index]}
                   source={{ context: "album", id: album.id }}
                   saved={savedTrackIds.has(track.id)}
+                  likesCount={track.likes_count ?? null}
                 />
               </li>
             ))}

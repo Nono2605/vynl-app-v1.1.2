@@ -11,10 +11,13 @@ export function FollowButton({
   artistId,
   initialFollowing,
   followersCount = null,
+  compact = false,
 }: {
   artistId: string;
   initialFollowing: boolean;
   followersCount?: number | null;
+  /** Bouton plus petit (platine, à côté du nom de l'artiste). */
+  compact?: boolean;
 }) {
   const [following, setFollowing] = useState(initialFollowing);
   const [count, setCount] = useState(followersCount);
@@ -42,7 +45,7 @@ export function FollowButton({
       <button
         onClick={toggle}
         disabled={pending}
-        className={`btn ${following ? "btn-secondary" : "btn-primary"}`}
+        className={`btn ${following ? "btn-secondary" : "btn-primary"}${compact ? " btn-sm" : ""}`}
       >
         {following ? "Following" : "Follow"}
       </button>

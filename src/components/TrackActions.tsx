@@ -11,14 +11,17 @@ export function TrackActions({
   track,
   source,
   saved,
+  likesCount,
 }: {
   track: PlayerTrack;
   source?: PlaySource;
   saved: boolean;
+  /** Nombre de « j'aime » du morceau, affiché à côté du cœur. */
+  likesCount?: number | null;
 }) {
   return (
     <div className="track-actions">
-      <SaveButton itemType="track" itemId={track.id} initialSaved={saved} size={20} />
+      <SaveButton itemType="track" itemId={track.id} initialSaved={saved} size={20} likesCount={likesCount ?? null} />
       <TrackMenu track={track} source={source} />
     </div>
   );

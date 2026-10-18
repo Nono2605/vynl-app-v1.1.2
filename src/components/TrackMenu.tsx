@@ -41,10 +41,19 @@ export function TrackMenu({
   track,
   source,
   actions = serverActions,
+  variant = "more",
+  triggerClassName = "",
 }: {
   track: PlayerTrack;
   source?: PlaySource;
   actions?: TrackMenuActions;
+  /**
+   * « more » : le menu « ⋯ » complet. « playlist » : un bouton « + » qui ouvre tout de suite la liste des
+   * playlists (la platine, où « ajouter à une playlist » est une action à part entière).
+   */
+  variant?: "more" | "playlist";
+  /** Classe en plus sur le bouton (ex. la taille tactile de la platine). */
+  triggerClassName?: string;
 }) {
   const { track: current, enqueue } = usePlayer();
   const toast = useToast();
@@ -62,6 +71,9 @@ export function TrackMenu({
   const [problem, setProblem] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
+  // Où le menu est rendu : dans la boîte de dialogue qui contient le bouton (la platine, dont le calque
+  // est au-dessus d'un menu posé dans <body>, et qui isole le reste pour les lecteurs d'écran), sinon <body>.
+  const [root, setRoot] = useState<Element | null>(null);
 
   const open = openPath === pathname;
 
@@ -85,7 +97,9 @@ export function TrackMenu({
     setProblem(null);
     setCreating(false);
     setTitle("");
+    setRoot(buttonRef.current?.closest('[role="dialog"]') ?? null);
     setOpenPath(pathname);
+    if (variant === "playlist") void showPlaylists();
   }
 
   // Fermeture : clic ailleurs, défilement de la page, redimensionnement. (Un défilement DANS
@@ -180,14 +194,15 @@ export function TrackMenu({
       <button
         ref={buttonRef}
         type="button"
-        className="track-menu-btn icon-btn"
+        className={`track-menu-btn icon-btn ${triggerClassName}`.trim()}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        aria-label={`Options for ${track.title}`}
+        aria-label={variant === "playlist" ? `Add ${track.title} to a playlist` : `Options for ${track.title}`}
+        title={variant === "playlist" ? "Add to playlist" : undefined}
         onClick={toggle}
       >
-        <MoreIcon size={20} />
+        {variant === "playlist" ? <PlusIcon size={24} /> : <MoreIcon size={20} />}
       </button>
 
       {open &&
@@ -201,7 +216,7 @@ export function TrackMenu({
             style={{ left: place.left, top: place.top, bottom: place.bottom, width: MENU_WIDTH }}
             onKeyDown={onKeyDown}
           >
-            {view === "menu" ? (
+            {view === "menu" && variant === "more" ? (
               <>
                 <button type="button" role="menuitem" className="track-menu__item" onClick={() => queueTrack("next")}>
                   <QueueIcon size={18} />
@@ -218,10 +233,14 @@ export function TrackMenu({
               </>
             ) : (
               <>
-                <button type="button" role="menuitem" className="track-menu__item track-menu__back" onClick={() => setView("menu")}>
-                  <ChevronLeftIcon size={18} />
-                  Add to playlist
-                </button>
+                {variant === "more" ? (
+                  <button type="button" role="menuitem" className="track-menu__item track-menu__back" onClick={() => setView("menu")}>
+                    <ChevronLeftIcon size={18} />
+                    Add to playlist
+                  </button>
+                ) : (
+                  <p className="track-menu__title">Add to playlist</p>
+                )}
 
                 {playlists.status === "loading" && (
                   <p className="track-menu__note" role="status">
@@ -290,7 +309,7 @@ export function TrackMenu({
               </>
             )}
           </div>,
-          document.body
+          root ?? document.body
         )}
     </>
   );

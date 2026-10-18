@@ -105,6 +105,7 @@
   --z-player: 50;
   --z-menu: 60;
   --z-overlay: 70;
+  --z-toast: 80;
   --z-skip: 100;
 }
 
@@ -530,6 +531,24 @@ textarea {
   letter-spacing: 0.06em;
 }
 /* « E » : contenu explicite, à côté d'un titre. Contour fin, sans couleur d'alerte. */
+/* Nombre de « j'aime » d'un morceau : petit, discret, à côté du cœur. */
+.like-count {
+  color: var(--vynl-texte-2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.like-count--btn {
+  color: inherit;
+}
+.like-count--inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 0.5rem;
+}
+
 .explicit-badge {
   display: inline-flex;
   align-items: center;
@@ -1163,6 +1182,52 @@ textarea {
   gap: 0.5rem;
   min-width: 0;
   max-width: 520px;
+}
+.np__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 44px;
+  /* Les boutons font 44 px de haut, l'étiquette 20 : on rogne la marge pour ne pas allonger la platine. */
+  margin-block: -0.5rem;
+}
+.np__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.np__actions .np__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.np__actions .np__action--wide {
+  width: auto;
+  min-width: 44px;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  gap: 6px;
+}
+.np__action--ghost {
+  color: var(--vynl-texte-3);
+  opacity: 0.5;
+}
+.np__artist-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  min-height: 36px;
+}
+.np__retry {
+  color: var(--vynl-azur-clair);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
 .np__eyebrow {
   color: var(--vynl-cyan);
@@ -2270,6 +2335,13 @@ textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.track-menu__title {
+  margin-bottom: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--vynl-bordure);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
 .track-menu__back {
   margin-bottom: 0.25rem;
   border-bottom: 1px solid var(--vynl-bordure);
@@ -2330,7 +2402,8 @@ textarea {
   position: fixed;
   left: 50%;
   bottom: calc(var(--player-bar-height) + 16px);
-  z-index: var(--z-menu);
+  /* Au-dessus de la platine (--z-overlay) : « Added to … » s'y voit aussi. */
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   align-items: center;

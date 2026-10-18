@@ -27,6 +27,7 @@ interface PlaylistTrack extends TrackMeta {
   albums: { cover_url: string | null } | null;
   provenance?: Provenance | null;
   explicit?: boolean;
+  likes_count?: number;
 }
 
 interface PlaylistDetail {
@@ -146,6 +147,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
                   track={queue[index]}
                   source={{ context: "playlist", id: playlist.id }}
                   saved={savedTrackIds.has(track.id)}
+                  likesCount={track.likes_count ?? null}
                 />
                 {playlist.is_owner && (
                   <form action={removeTrackFromPlaylist.bind(null, playlist.id, track.id)}>

@@ -7,6 +7,7 @@ import { usePlayer, type PlayerTrack } from "@/lib/player/PlayerContext";
 import { Icon, PlayIcon, SearchIcon, SpinnerIcon } from "@/components/icons";
 import { VinylCover } from "@/components/VinylCover";
 import { ExplicitBadge } from "@/components/ExplicitBadge";
+import { LikeCount } from "@/components/LikeCount";
 import type { Track } from "@/components/TrackGrid";
 import type { Album } from "@/components/AlbumGrid";
 import type { Artist } from "@/components/ArtistGrid";
@@ -243,7 +244,10 @@ export function SearchBox() {
                     <Marked text={item.track.title} query={trimmed} />
                     <ExplicitBadge explicit={item.track.explicit} />
                   </span>
-                  <span className="search__sub">{item.player.artistName}</span>
+                  <span className="search__sub">
+                    {item.player.artistName}
+                    <LikeCount count={item.track.likes_count} />
+                  </span>
                 </span>
                 <span className="search__play" aria-hidden="true">
                   <PlayIcon size={14} />
