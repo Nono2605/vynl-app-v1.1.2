@@ -94,7 +94,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               ` (renews ${new Date(subscription.current_period_end).toLocaleDateString()})`}
           </p>
         ) : (
-          <p style={{ color: "var(--vynl-texte-2)" }}>No active subscription yet.</p>
+          billing && <p style={{ color: "var(--vynl-texte-2)" }}>No active subscription yet.</p>
         )}
 
         {checkout === "success" && (
@@ -104,6 +104,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         )}
         {checkout === "cancelled" && (
           <p style={{ color: "var(--vynl-texte-2)", marginTop: "var(--space-sm)" }}>Checkout cancelled: nothing was charged.</p>
+        )}
+
+        {!billing && !managed && (
+          <p style={{ color: "var(--vynl-texte-2)", marginTop: "var(--space-sm)" }}>
+            Subscriptions will be available after the beta. Until then, listening is free.
+          </p>
         )}
 
         {billing && (
